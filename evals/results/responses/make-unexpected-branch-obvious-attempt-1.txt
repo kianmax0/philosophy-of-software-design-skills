@@ -1,0 +1,16 @@
+Review of supplied `search_names.py` fixture
+
+Reader and task: A caller reading a call to `process` needs to know whether the returned list contains row IDs or email addresses.
+
+Finding — `process` has two output meanings selected by an unclear boolean
+
+- Reader's question: “What kind of values does `process(rows, ...)` return?”
+- Likely first guess: From the generic name `process` and the default `flag=False`, a caller cannot infer the result's meaning. A positional `True` does not reveal which output it selects.
+- Actual behavior (from the supplied fixture): `process` first filters rows whose `active` value is truthy. With `flag=True`, it returns the selected rows' `email` values; with the default or `flag=False`, it returns their `id` values. The two branches are at lines 6–7 and 8; the function declaration and default are at line 4. These line numbers refer only to the supplied snippet.
+- Where the information is hidden: The output distinction is encoded in the generic parameter name `flag` and a branch inside the function, rather than in a meaningful argument name visible at a call site. No representative caller or type contract was included in the fixture, so I could not inspect how callers invoke it or whether they rely on the positional form.
+- Practical misunderstanding: A caller may read the wrong field from the returned values or assume the return contract is stable across calls.
+- Smallest bounded clarification: Make the selector keyword-only and name its meaning, for example `def process(rows, *, return_emails=False):`, then branch on `return_emails`. This makes a call such as `process(rows, return_emails=True)` state which result it requests and leaves the default ID behavior visible in the declaration. If the API should not return two different kinds of values, the owner should instead choose separate purpose-named operations; the fixture does not establish that intended contract, so I would not make that larger change based on this evidence alone.
+
+Scope and verification: I reviewed only the supplied fixture. I did not inspect or test callers, contracts, or runtime behavior, and I made no edits. The branch behavior above is read directly from the fixture; the proposed change is a review recommendation, not an applied or tested fix. The `load` function's docstring states that it reads JSON and returns decoded records; no material inference burden is shown for that path in the supplied snippet.
+
+Loaded skill SHA-256: `6e877960cfb9926e21a868c0f0d5b5cc670b57015663613e9b070fb8b82b84ee`

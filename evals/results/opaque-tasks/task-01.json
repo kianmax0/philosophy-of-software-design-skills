@@ -1,0 +1,8 @@
+{
+  "id": "task-874eea9e0f39",
+  "skill_path": "skills/posd-abstraction-layers/SKILL.md",
+  "mode": "review",
+  "request": "Review this layer. Is its mostly forwarding interface a design problem? Give your assessment with code evidence. Do not edit files.",
+  "raw_fixture": "\"\"\"Original negative fixture; a small boundary owns an authorization invariant.\"\"\"\n\n\nclass DocumentGateway:\n    def __init__(self, store, permissions):\n        self._store = store\n        self._permissions = permissions\n\n    def read(self, actor, document_id):\n        \"\"\"Return bytes only when actor has read permission; never reveal denied content.\"\"\"\n        self._permissions.require_read(actor, document_id)\n        return self._store.read(document_id)\n\n\ndef read_for_download(gateway, actor, document_id):\n    return gateway.read(actor, document_id)\n\n\ndef read_for_preview(gateway, actor, document_id):\n    return gateway.read(actor, document_id)\n",
+  "fixture_name": "document_gateway.py"
+}

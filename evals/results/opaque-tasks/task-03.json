@@ -1,0 +1,8 @@
+{
+  "id": "task-ec458af17fc1",
+  "skill_path": "skills/posd-performance/SKILL.md",
+  "mode": "review",
+  "request": "A proposal adds an index to speed up repeated catalog lookups. Assess the proposal from the supplied code and evidence. Do not edit or invent benchmark results.",
+  "raw_fixture": "\"\"\"A correct linear search with no demonstrated performance target.\"\"\"\n\n\ndef find_item(items, requested_id):\n    for item in items:\n        if item[\"id\"] == requested_id:\n            return item\n    return None\n\n\ndef find_items(items, requested_ids):\n    return [find_item(items, requested_id) for requested_id in requested_ids]\n",
+  "fixture_name": "search_catalog.py"
+}

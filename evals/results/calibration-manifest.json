@@ -1,0 +1,274 @@
+{
+  "date": "2026-10-05",
+  "base_commit": "31dd1de37e43b9f1ce0ed80876c1bb2fb0afdebc",
+  "source_pdf_sha256": "c51c08a01b89a82fbc87c6b41f3f22228a21c0e5e769e601742b8f69b76e5d39",
+  "cases_sha256": "93d1e4dce64b540eb6d54bc00761ce1066f30efa5c6faed9d6e749abe9705177",
+  "evaluation_method": "One fresh collaboration agent per task, fork_turns=none, default role, no model override; task/fixture and one skill only; rubric/prior responses withheld. Descriptive case IDs and task filenames were visible in the initial full-corpus run. Exact runtime model identifier was not exposed.",
+  "cases": [
+    {
+      "id": "shared-storage-knowledge",
+      "skill": "posd-information-hiding",
+      "mode": "review",
+      "skill_sha256": "b04d77b3c6e6bdc064d47081917d2d2baf02ec007a759fbca849bbb449f0b0e9",
+      "fixture": "fixtures/importers.py",
+      "fixture_sha256": "7a51e0f16745b1f132d00a230915c13a622341782d4be4d3c8cb851be912f12c",
+      "request": "Review these importers before we add a third importer and change the storage record format. Identify design problems and give a bounded recommendation. Do not edit files.",
+      "response": "responses/shared-storage-knowledge.txt",
+      "response_sha256": "b908b9611612eb61031364e857359938f9f509c515d8a05ae2a460aa28f4afc1"
+    },
+    {
+      "id": "justified-authorization-boundary",
+      "skill": "posd-abstraction-layers",
+      "mode": "review",
+      "skill_sha256": "0e4d1bf06d093ead792aaffcb25d4e1253cac085b5344bcbf38b143d6d85ffcc",
+      "fixture": "fixtures/document_gateway.py",
+      "fixture_sha256": "1f9fc73d132df6573f1753ec47bdac243527c90015428d83055ce4592a8c54b4",
+      "request": "Review this layer. Is its mostly forwarding interface a design problem? Give your assessment with code evidence. Do not edit files.",
+      "response": "responses/justified-authorization-boundary.txt",
+      "response_sha256": "abc749cb8d353c144a3096322113d92dfa1a150fec7798a7eacb8f472899ea0e"
+    },
+    {
+      "id": "absence-is-not-failure",
+      "skill": "posd-error-design",
+      "mode": "review",
+      "skill_sha256": "888ab647457ef5af0b528044d77c4d098d4455b1d06a36d2eeecaa7e4273352c",
+      "fixture": "fixtures/settings_store.py",
+      "fixture_sha256": "c23cc0eda6abbf8c94d037e3f76ab68816bf03d7c79c138602c3a9af0a6aa27c",
+      "request": "Review the optional-setting error contract. Simplify callers if useful but preserve the distinction between absence and operational failures. Do not edit files.",
+      "response": "responses/absence-is-not-failure.txt",
+      "response_sha256": "d99640acf053c1e77870b3e1b9d3a6f607dc810234d5cb06042125752e7ac980"
+    },
+    {
+      "id": "trace-change-cost",
+      "skill": "posd-complexity",
+      "mode": "review",
+      "skill_sha256": "203285044b7860ad49e6fa4888f0f768d53a3cfe00e1bc0bdf31218214a08742",
+      "fixture": "fixtures/importers.py",
+      "fixture_sha256": "7a51e0f16745b1f132d00a230915c13a622341782d4be4d3c8cb851be912f12c",
+      "request": "A third importer and a timestamp-unit change are planned. Trace the concrete change through these functions and identify the maintenance burden. Recommend the smallest useful improvement; do not edit.",
+      "response": "responses/trace-change-cost.txt",
+      "response_sha256": "f11e6cd7e834a82d445cf80fc3e66cf6f86ae0be7205e1f3fbdd6193e0aea26d"
+    },
+    {
+      "id": "combine-shared-record-policy",
+      "skill": "posd-module-boundaries",
+      "mode": "review",
+      "skill_sha256": "a18035dbfc933a6f02b7982175318f5dc0a5df77a216bdecd9d195cc939a9415",
+      "fixture": "fixtures/importers.py",
+      "fixture_sha256": "7a51e0f16745b1f132d00a230915c13a622341782d4be4d3c8cb851be912f12c",
+      "request": "Should record construction and validation move behind a shared boundary? Compare the current arrangement with a bounded alternative and preserve source-specific meaning. Do not edit.",
+      "response": "responses/combine-shared-record-policy.txt",
+      "response_sha256": "90798b894db5c07959dd10c3074fc14c09a3ace6f3341a24541bdf7aa00187a6"
+    },
+    {
+      "id": "consistency-with-meaningful-differences",
+      "skill": "posd-consistency",
+      "mode": "review",
+      "skill_sha256": "111db4d8a227fc0a8ff2a80be1e8b873f78f887bb6e9b134b7b56d21a08acf52",
+      "fixture": "fixtures/batch_writer.py",
+      "fixture_sha256": "b711b962d905301f4316e549b454da9ac88fb715f2c866fcb2b286877108c858",
+      "request": "Compare the three batch writers. Identify duplicated behavior worth aligning and differences that should remain. Recommend a narrow change; do not edit.",
+      "response": "responses/consistency-with-meaningful-differences.txt",
+      "response_sha256": "869f20211abd5aa64440af543987edf1ffdb5f52847979b82d767fad7b1e4455"
+    },
+    {
+      "id": "comments-preserve-nonobvious-truth",
+      "skill": "posd-comments",
+      "mode": "review",
+      "skill_sha256": "cb1490b3da74205dfb97cc0e1b6f42e6758b145ebd7604dde4db2428031d5a0e",
+      "fixture": "fixtures/comments_and_units.py",
+      "fixture_sha256": "da441b2c6302df02073493eb9445d044f9aea11d3b5283ef900e2bd7ce88103e",
+      "request": "Review the comments and docstrings against the implementation. Correct only statements that mislead a maintainer, and explain which unit distinctions the comments should preserve. Do not edit.",
+      "response": "responses/comments-preserve-nonobvious-truth.txt",
+      "response_sha256": "f5074c71a3af40ce74aabed3d1a44a4221573a21aa82a72c21ecf84c91f64dac"
+    },
+    {
+      "id": "compare-delivery-contracts",
+      "skill": "posd-design-twice",
+      "mode": "review",
+      "skill_sha256": "e8dc805feaf3963cf12168dd856377d5cb832259ca6fbe3ddd800282699f2ae1",
+      "fixture": "fixtures/notification_designs.py",
+      "fixture_sha256": "4d7b30f2d4da106a73596391e294652d96ee69161572a522b597a7df6ba5c0ef",
+      "request": "Choose a notification design for a user-facing request that must report immediate delivery failure. Compare the inline and queued designs, including one credible alternative if the requirement changes. Do not edit.",
+      "response": "responses/compare-delivery-contracts.txt",
+      "response_sha256": "bf38fb6a521db4541a2d8eb06bd284bb68c33a5c64bac794635ac801226672ae"
+    },
+    {
+      "id": "reduce-export-interface-depth-cost",
+      "skill": "posd-deep-modules",
+      "mode": "review",
+      "skill_sha256": "93cd12865fc6a4790a9d1da42647f5ed1ccd36bd9421209781f83caac49b32d2",
+      "fixture": "fixtures/export_options.py",
+      "fixture_sha256": "3afe7e271cc41081e8695ab5b56a46a7a2ee7d6ea673d50d1da936a9fe7b7948",
+      "request": "Review the export API and its implementation. Suggest a design that gives callers a coherent operation while retaining necessary control over output. Do not edit.",
+      "response": "responses/reduce-export-interface-depth-cost.txt",
+      "response_sha256": "7dc9eb575d3addaf4c9b07a70eed7acd8435ecea88b1c409c2ba302b04ad6545"
+    },
+    {
+      "id": "review-entrypoint-scope",
+      "skill": "posd-design-review",
+      "mode": "review",
+      "skill_sha256": "ed35d1991adfea072aec1c7b2a6af9e7ba4ea98fee91d09983312fbeaf45cf20",
+      "fixture": "fixtures/document_gateway.py",
+      "fixture_sha256": "1f9fc73d132df6573f1753ec47bdac243527c90015428d83055ce4592a8c54b4",
+      "request": "Review the gateway diff conceptually for design risks. Return only the few highest-value supported findings and mention what additional system context you would need. Do not edit.",
+      "response": "responses/review-entrypoint-scope.txt",
+      "response_sha256": "8215f9882934cd8dd816384b27fadcc6ca177f1e471d4ec03d349b27860dc48e"
+    },
+    {
+      "id": "generality-from-real-use-cases",
+      "skill": "posd-general-purpose",
+      "mode": "review",
+      "skill_sha256": "cfdd48e3aada1bc40854b5cdf7b2d40718b4e0e89a13f5ce61270c1423e5cca9",
+      "fixture": "fixtures/export_options.py",
+      "fixture_sha256": "3afe7e271cc41081e8695ab5b56a46a7a2ee7d6ea673d50d1da936a9fe7b7948",
+      "request": "The first caller only exports CSV, but two known callers also need JSON and a filtered export. Decide whether to generalize this interface and describe the smallest coherent capability. Do not edit.",
+      "response": "responses/generality-from-real-use-cases.txt",
+      "response_sha256": "efad0a49580087f08e79d906ad4684aacbff6e0a649306c983de2adcd360a58f"
+    },
+    {
+      "id": "decision-owner-for-storage-format",
+      "skill": "posd-information-hiding",
+      "mode": "review",
+      "skill_sha256": "b04d77b3c6e6bdc064d47081917d2d2baf02ec007a759fbca849bbb449f0b0e9",
+      "fixture": "fixtures/importers.py",
+      "fixture_sha256": "7a51e0f16745b1f132d00a230915c13a622341782d4be4d3c8cb851be912f12c",
+      "request": "Review who should own storage-record representation as the format changes. Give a recommendation and state what the fixture does not establish. Do not edit.",
+      "response": "responses/decision-owner-for-storage-format.txt",
+      "response_sha256": "dd420854a333a4250756dc52506c48cf572b801ac6a3af5a1d24b7f64e676e82"
+    },
+    {
+      "id": "choose-caller-visible-export-decisions",
+      "skill": "posd-decide-what-matters",
+      "mode": "review",
+      "skill_sha256": "c30656121cfdec1383837f8be4bfaafce36381b9a6f4ead2db6cbf9b03d82221",
+      "fixture": "fixtures/export_options.py",
+      "fixture_sha256": "3afe7e271cc41081e8695ab5b56a46a7a2ee7d6ea673d50d1da936a9fe7b7948",
+      "request": "Simplify this export interface for the stated CSV caller while preserving header control and the required date representation. Identify which current options should stay explicit or become defaults. Do not edit.",
+      "response": "responses/choose-caller-visible-export-decisions.txt",
+      "response_sha256": "a8d0e3d7d87c338fa9552420528f6ceadf1378512026cd441d14e1cd1de49807"
+    },
+    {
+      "id": "name-by-role-and-contract",
+      "skill": "posd-naming",
+      "mode": "review",
+      "skill_sha256": "831bfc88e8e417790378801a8b6f601337c8650a90f3a5eb2f01156125c62259",
+      "fixture": "fixtures/search_names.py",
+      "fixture_sha256": "96890fa1c12b3a8fe4004aa9bb20c3a25a3e1ab90a9987d3d6cf21f775d192a1",
+      "request": "Review the public names and their call-site meaning. Propose only renames that make the contract clearer, and account for compatibility before recommending changes. Do not edit.",
+      "response": "responses/name-by-role-and-contract.txt",
+      "response_sha256": "961460bf35041e16485addf2c258cd60c3bd8c7aa90df36918420feab930cbcb"
+    },
+    {
+      "id": "make-unexpected-branch-obvious",
+      "skill": "posd-obvious-code",
+      "mode": "review",
+      "skill_sha256": "11b35423c0286cfe667524fc6b7bbe88a7e9648afe13f79fe2e9cfe1dab42470",
+      "fixture": "fixtures/search_names.py",
+      "fixture_sha256": "96890fa1c12b3a8fe4004aa9bb20c3a25a3e1ab90a9987d3d6cf21f775d192a1",
+      "request": "A caller cannot tell whether process returns IDs or emails. Review the relevant path and recommend the smallest clarification at the point of use. Do not edit.",
+      "response": "responses/make-unexpected-branch-obvious.txt",
+      "response_sha256": "edec93bd4ad4b632e0619ccde9aa0d41c6d50f1dfa1266f8609d7cd5f94dbcaa"
+    },
+    {
+      "id": "measure-before-adding-index",
+      "skill": "posd-performance",
+      "mode": "review",
+      "skill_sha256": "8c9a69ed69717abfe297a9a69d22933df6858ed279298249db2e7a1135f60466",
+      "fixture": "fixtures/search_catalog.py",
+      "fixture_sha256": "c7762565f97d4f9d4fae359cb2b9aac17d0ae5e6ef373463cbb2f0572233a455",
+      "request": "A proposal adds an index to speed up repeated catalog lookups. Assess the proposal from the supplied code and evidence. Do not edit or invent benchmark results.",
+      "response": "responses/measure-before-adding-index.txt",
+      "response_sha256": "178a6c62630ebb4e98da4f55079f7482f99c711ef49f07de32cfcf8a205a9845"
+    },
+    {
+      "id": "move-shared-retry-mechanics-down",
+      "skill": "posd-pull-complexity-down",
+      "mode": "review",
+      "skill_sha256": "808d8bdd7f49d8e7dcfecd4e772d43a06423e202bf5a1b1ed1f9e434eb87a617",
+      "fixture": "fixtures/batch_writer.py",
+      "fixture_sha256": "b711b962d905301f4316e549b454da9ac88fb715f2c866fcb2b286877108c858",
+      "request": "Two callers repeat validation and timeout retry mechanics around write_many. Recommend whether a lower-level operation should own any of this complexity, and preserve the payment semantics. Do not edit.",
+      "response": "responses/move-shared-retry-mechanics-down.txt",
+      "response_sha256": "abcc32baabdde8b72a120922f4daaaa5b2e3d4f83329cfcf20ff6f5b4240c5e4"
+    },
+    {
+      "id": "bounded-design-investment",
+      "skill": "posd-strategic-design",
+      "mode": "review",
+      "skill_sha256": "8eeff716e0c6615a15e930f8aaf85b6f32b644ffaf14a94d488e5af8e118d8d4",
+      "fixture": "fixtures/importers.py",
+      "fixture_sha256": "7a51e0f16745b1f132d00a230915c13a622341782d4be4d3c8cb851be912f12c",
+      "request": "Implementing a third importer now could copy the record rules again. Describe the direct patch and a bounded design investment, then recommend one based only on this fixture and change. Do not edit.",
+      "response": "responses/bounded-design-investment.txt",
+      "response_sha256": "53038281947bb4acba7727335619e16add092a8b6e639c8e93459a9c3ab2afdd"
+    },
+    {
+      "id": "fix-optional-setting-failure-contract",
+      "skill": "posd-error-design",
+      "mode": "implementation",
+      "skill_sha256": "888ab647457ef5af0b528044d77c4d098d4455b1d06a36d2eeecaa7e4273352c",
+      "fixture": "fixtures/settings_store.py",
+      "fixture_sha256": "c23cc0eda6abbf8c94d037e3f76ab68816bf03d7c79c138602c3a9af0a6aa27c",
+      "request": "In an isolated temporary workspace, implement the smallest change that makes get_optional return None only for a missing key while propagating operational failures. Keep get_required unchanged. Add or run deterministic checks for missing, present, permission-failing, and transport-failing reads; report exactly what you ran.",
+      "response": "responses/fix-optional-setting-failure-contract.txt",
+      "response_sha256": "1612580bdc5588b48e46cde95ab5f9a69a681840843765500c955a5228a41c5d"
+    },
+    {
+      "id": "centralize-versioned-record-construction",
+      "skill": "posd-information-hiding",
+      "mode": "implementation",
+      "skill_sha256": "b04d77b3c6e6bdc064d47081917d2d2baf02ec007a759fbca849bbb449f0b0e9",
+      "fixture": "fixtures/importers.py",
+      "fixture_sha256": "7a51e0f16745b1f132d00a230915c13a622341782d4be4d3c8cb851be912f12c",
+      "request": "In an isolated temporary workspace, make the smallest refactor that gives versioned storage-record construction and validation one owner across both importers. Preserve each source kind, the exact int(seconds * 1000) conversion followed by the nonnegative-result check (including submillisecond values near zero), stored record shape, and write order. Add or run deterministic contract checks and report exactly what you ran.",
+      "response": "responses/centralize-versioned-record-construction.txt",
+      "response_sha256": "b68ff096ed21209d0ea834732efe21364a9a05158f58ba0da3b329a94320855a"
+    }
+  ],
+  "first_attempt": {
+    "id": "make-unexpected-branch-obvious",
+    "skill_sha256": "6e877960cfb9926e21a868c0f0d5b5cc670b57015663613e9b070fb8b82b84ee",
+    "skill_snapshot": "snapshots/posd-obvious-code-attempt-1.txt",
+    "response": "responses/make-unexpected-branch-obvious-attempt-1.txt",
+    "response_sha256": "52ba4670ffe55a364b193a634d380e836b8bcd0c977f47446cb0d32a5f4414a7"
+  },
+  "opaque_repeats": [
+    {
+      "case_id": "justified-authorization-boundary",
+      "task_id": "task-874eea9e0f39",
+      "task": "opaque-tasks/task-01.json",
+      "response": "responses/opaque-response-01.txt",
+      "response_sha256": "133adb98d61da800f648e1a8e2c2a289bffffe06b147645603e6422aa3ce9a72",
+      "skill_sha256": "0e4d1bf06d093ead792aaffcb25d4e1253cac085b5344bcbf38b143d6d85ffcc"
+    },
+    {
+      "case_id": "review-entrypoint-scope",
+      "task_id": "task-454e52025239",
+      "task": "opaque-tasks/task-02.json",
+      "response": "responses/opaque-response-02.txt",
+      "response_sha256": "628fb16495c1284d02624db4596ff6f1325103d8adcd69d2571de533b7f501f4",
+      "skill_sha256": "ed35d1991adfea072aec1c7b2a6af9e7ba4ea98fee91d09983312fbeaf45cf20"
+    },
+    {
+      "case_id": "measure-before-adding-index",
+      "task_id": "task-ec458af17fc1",
+      "task": "opaque-tasks/task-03.json",
+      "response": "responses/opaque-response-03.txt",
+      "response_sha256": "7f33301c3b0d66188542754c475ab159f47fb301d6db156e77e0f010d40ecdc2",
+      "skill_sha256": "8c9a69ed69717abfe297a9a69d22933df6858ed279298249db2e7a1135f60466"
+    }
+  ],
+  "opaque_payload_note": "Retained task JSON normalizes skill_path to a repository-relative locator for portability; observed task IDs, requests, fixture names/content, skill hashes and raw responses are unchanged. Re-export with scripts/prepare_eval.py for a live absolute skill path.",
+  "implementation_artifacts": {
+    "implementations/centralize-versioned-record-construction/check_contract-original.txt": "4a5f08c7c6ebb37eef7878fdbe974ae818922d294bf111462af75132b68c26ef",
+    "implementations/centralize-versioned-record-construction/check_contract.py": "d84767e4445869d626eb6a458df9d10803b22e18cbed93312fe4987d5958e6bf",
+    "implementations/centralize-versioned-record-construction/importers.py": "db4ff8583200ea5cd6842da566ad68a06bf0f3f01a043e5feef8ce6c2751f6f5",
+    "implementations/fix-optional-setting-failure-contract/check_settings_store.py": "bd5f4148747cf81d5742c86c378c7e49b23bba4e14a723f1f28e2fe16e440c11",
+    "implementations/fix-optional-setting-failure-contract/settings_store.py": "a125b5d26423b20abb19d882cac7650a7a8a5604d6b2428beb8fcff6f663d280"
+  },
+  "grading_files": {
+    "grading.json": "f3b3c7faddb1648bf951d49b08b469521e204789502706b193133a04b13d2acf",
+    "opaque-grading.json": "e6d6d90e51904c96c555563a07b1021c0c62812f4a74f48f1f397df2bc54f5ef"
+  }
+}

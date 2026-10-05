@@ -1,60 +1,29 @@
 ---
 name: posd-performance
-description: Evaluate a performance-driven code or design change against an explicit workload, measured bottleneck, correctness contract, and reproducible comparison.
+description: Design or review a performance change around an explicit target, measured bottleneck, simple common path, and before/after evidence.
 license: MIT
 ---
 
-# Evaluate performance-driven design
+# Design for performance without losing simplicity
 
-Treat performance as a requirement when evidence or an explicit service objective makes it one. A speed claim alone does not justify more configuration, special cases, or a harder-to-understand interface.
+Favor designs that are naturally efficient and clean. Avoid optimizing every statement: many supposed improvements do not help and add complexity. Also do not ignore known expensive operations or a clear system objective; making a few important design choices early can prevent widespread inefficiency.
 
-## Establish the target
+Source: John Ousterhout, *A Philosophy of Software Design*, 2nd ed. (2021), Chapter 20, §§20.1–20.5 (PDF file-page numbers, pp. 186–197), especially measurement and critical-path design in §§20.2–20.3. The workflow applies those ideas to a new example.
 
-Identify the operation, user-visible latency or throughput objective, workload, input distribution, environment, and correctness contract. Read the affected implementation and callers. For a review, report without editing. Implement only when requested; preserve semantics outside the requested performance behavior.
+## Procedure
 
-Ask what measurement demonstrates the bottleneck. Prefer an existing profile, benchmark, production trace, or reproducible workload. Record baseline and candidate with the same inputs and environment, relevant repetitions, and the metric that matters. If no measurement exists, label the suspected bottleneck as a hypothesis and recommend a bounded measurement before adding complexity.
+1. **State the target.** Identify the operation, user-visible latency/throughput or resource goal, common and exceptional input cases, environment, and correctness contract. Record why performance matters: an explicit objective, known expensive operation, profile, or observed problem.
+2. **Choose the right scale of evidence.** If the target is not already clear, benchmark or profile representative work. Measure deep enough to identify the specific costs and call path; a slow top-level result alone does not locate the cause. Record the baseline before changing code. For naturally efficient alternatives (for example, hash lookup when ordering is unnecessary), compare the relevant constraints instead of adding tuning machinery without need.
+3. **Look for a fundamental fix first.** Consider an algorithm, data-flow, representation, ownership, or I/O change that removes the cost. Prefer it when it is clean and meets the contract. Add hidden implementation complexity only when evidence or a clear requirement justifies it; avoid exposing new interface choices unless callers genuinely own them.
+4. **For a measured hot path, define the ideal common path.** Set aside the current structure. Write down the minimum work and data needed for the most common case, including unavoidable operations and checks. Compare the current call chain, layer crossings, repeated tests, and special-case handling with this ideal.
+5. **Refactor toward the ideal while keeping useful abstractions.** Remove shallow pass-through layers, redundant checks, and common-path work that exists only for uncommon cases. Keep data and work close to the critical path without exposing implementation detail to callers. Prefer one early guard that detects exceptional conditions; route those cases to a separate slow path that can be organized for clarity. Do not compress code into an opaque fast path.
+6. **Measure again and verify semantics.** Use the same harness, workload, environment, and relevant warm-up/cache conditions as the baseline. Repeat enough to expose noise; report variance or a range. Verify results, ordering, errors, ownership, and resource guarantees separately from speed. Keep added complexity only for a meaningful measured gain or a design that also became simpler; otherwise back it out.
+7. **Carry out the requested mode.** For an implementation request, make the bounded optimization and update affected callers/contracts; run the benchmark/profile and relevant correctness checks, then report exact commands and results. For review-only work, report evidence and recommendations without editing. If measurement cannot be run, state that plainly and do not claim a speedup.
 
-## Inspect the tradeoff
+## Example: value serializer
 
-Trace the costly work from the caller through the relevant modules. Determine whether time, memory, I/O, allocation, contention, or another resource dominates under the target workload. Consider whether a simpler ownership or data-flow change can address it before introducing a cache, special fast path, tuning option, or duplicated implementation.
+Suppose a service profile shows that serialization dominates because a common integer field repeatedly enters a general type-dispatch path with checks for rare value kinds. After recording a baseline, compare a direct common-integer path guarded once at entry with the existing general serializer handling uncommon values. Keep the branch only if the representative workload improves and outputs, errors, and encoding remain identical; report the actual measured result rather than inferring a gain from fewer calls.
 
-For each proposed optimization, explain:
+## Report
 
-1. Which measured cost it changes and for which workload.
-2. What state, branches, invalidation rules, configuration, or maintenance burden it adds.
-3. Whether it preserves results, ordering, error behavior, and resource guarantees.
-4. How it performs against the baseline, including regressions in relevant workloads or resource use.
-
-Do not infer that fewer calls or allocations are faster without measurement. Do not trade correctness or an essential contract for an unquantified improvement. Keep a fast path only when its measured benefit is meaningful and its conditions remain understandable.
-
-## Verify and report
-
-Run the relevant benchmark or profile on the same workload and environment when feasible. Verify correctness separately from speed. Report the exact command or harness, workload characteristics, baseline and candidate metrics, variability or limitations, and the semantic checks performed. Distinguish measured results from estimates and hypotheses. If measurements are unavailable, state what evidence would resolve the decision and avoid claiming a speedup.
-
-For repeatable comparisons, record the runtime and relevant machine or service
-conditions, input size and distribution, warm-up or cache state, and number of
-runs. Use the same harness for both versions. Report variance or a useful range
-when results fluctuate; do not present a single noisy run as a reliable gain.
-If the target environment differs from the measurement environment, name that
-limitation and avoid extrapolating beyond the evidence.
-
-### Example
-
-A developer proposes caching parsed configuration because startup “looks slow.” First profile startup with representative configuration sizes and repeat the baseline. If parsing is not a material cost, leave the cache out. If parsing dominates, compare a cache against reparsing and account for invalidation when configuration changes; verify that both paths produce the same configuration and error behavior.
-
-## Retain simpler behavior
-
-- A speculative speedup is insufficient evidence for extra state or special cases.
-- A workload-specific optimization may be valid when the workload is part of the stated requirement.
-- Keep the ordinary path clear and make exceptional fast-path assumptions explicit.
-- Report resource tradeoffs even when the target latency improves.
-
-## Evidence checklist
-
-- A stated performance objective or a measured user-visible problem.
-- A representative workload and comparable baseline.
-- A profile or measurement identifying the expensive operation.
-- A candidate result plus correctness and contract checks.
-- A note about variance, workload coverage, and resource tradeoffs.
-
-Principle provenance: John Ousterhout discusses focusing on significant performance costs in his [Stanford CS190 project review](https://web.stanford.edu/~ouster/cgi-bin/cs190-winter18/lecture.php?topic=raftReview2). The measurement procedure and workflow here are original adaptations.
+Give the objective and workload, measurement command/harness, baseline and candidate results, environment and variability, the identified cost, the common-path change and exceptional path, correctness checks, and resource or maintenance tradeoffs. Distinguish measured results from estimates and hypotheses. If the evidence is missing, specify the bounded measurement needed before claiming a speedup.

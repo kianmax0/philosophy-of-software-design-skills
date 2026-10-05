@@ -1,0 +1,38 @@
+Task and boundary
+
+Review the export interface for the stated CSV caller. The supplied fixture is `export_options.py`; the request identifies two behavior constraints: the caller must retain header control, and the required date representation must remain correct. No separate caller code, contract, or exceptional consumer was supplied. I therefore treat these two constraints as the evidence for the boundary and do not infer a need for other formats or policies.
+
+Evidence and recommendation
+
+`include_header` changes the exported rows in a caller-visible way, and the request expressly says to preserve header control. Keep it as the one caller-facing option. Its current `True` default is reasonable for an ordinary CSV export, while callers can set it to `False` when they need headerless output.
+
+The fixture defaults `date_format` to `"iso"`, and the request calls the date representation required. Assuming ISO is that required representation, make ISO a module-owned invariant and remove `date_format` from the caller-facing signature. This keeps callers from accidentally violating the required output contract. If the externally required representation is not ISO, substitute that required representation internally; the fixture and task do not establish another value.
+
+For the stated CSV use, keep comma as the module default and remove `delimiter` from this interface. No consumer needing another delimiter is shown. Keep `null_text=""` and `quote_all=False` as module defaults as well; the supplied evidence does not show that this caller has information requiring a choice. Those policies can be changed centrally if the CSV contract later establishes different values.
+
+Suggested caller-facing shape:
+
+```python
+def export_report(report, destination, *, include_header=True):
+    ...
+```
+
+Inside the module, the implementation would apply the CSV contract consistently: comma delimiter, ISO dates (under the assumption above), empty null text, and `quote_all=False`. Those implementation details should not appear as caller choices for this use.
+
+Leverage and caller experience
+
+The module can make the ordinary export predictable in one place while the caller supplies only the distinction it needs to control. A normal caller gets comma-separated CSV with the required date representation and a header by default. The meaningful exceptional caller that needs a headerless file can turn off the header without reimplementing export logic. No evidence was provided for a meaningful alternate delimiter, null spelling, quoting policy, or date representation, so this review does not recommend retaining those options on this caller's interface.
+
+Compatibility and uncertainty
+
+Removing `delimiter`, `date_format`, `null_text`, and `quote_all` is a source-compatibility change for any existing caller that passes those keywords. The fixture contains no such callers, so their existence is unknown; check actual call sites before applying the recommendation. If other supported consumers require these variations, retain a narrow extension for those demonstrated cases rather than making every CSV caller learn all four choices. The assumption that ISO is the required date representation should be confirmed against the governing CSV contract before implementation.
+
+Inspection and checks
+
+Inspected: the supplied task JSON, the raw fixture embedded in it, and the single skill file named by the task. The fixture shows the current defaults and how `include_header` affects rows; the task supplies the CSV-caller framing and the two constraints above.
+
+Tested: no code was run and no behavior tests were performed. This was a review-only request, and no repository files were edited.
+
+Proposed checks before implementation: inspect real call sites for uses of the four options recommended for removal; confirm the required date representation from its governing contract; then check a normal export for comma-separated output, required date formatting, empty nulls, default quoting, and a header, plus a headerless export with `include_header=False`.
+
+Loaded skill SHA-256: `c30656121cfdec1383837f8be4bfaafce36381b9a6f4ead2db6cbf9b03d82221`

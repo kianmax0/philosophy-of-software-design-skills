@@ -14,7 +14,8 @@
       "Treats deduplicating syntax alone as sufficient without hiding representation knowledge.",
       "Invents a plugin framework or rewrites unrelated components.",
       "Claims a runtime defect without evidence or edits despite a review-only request."
-    ]
+    ],
+    "mode": "review"
   },
   {
     "id": "justified-authorization-boundary",
@@ -31,7 +32,8 @@
       "Recommends deleting the layer solely because it is short or forwards a call.",
       "Moves authorization into every caller without addressing enforcement.",
       "Claims the entire system is secure from this fixture."
-    ]
+    ],
+    "mode": "review"
   },
   {
     "id": "absence-is-not-failure",
@@ -48,6 +50,283 @@
       "Suppresses all failures to simplify the caller.",
       "Changes required settings to silently return defaults.",
       "Asserts absent runtime test results or edits despite a review-only request."
+    ],
+    "mode": "review"
+  },
+  {
+    "id": "trace-change-cost",
+    "skill": "posd-complexity",
+    "fixture": "fixtures/importers.py",
+    "request": "A third importer and a timestamp-unit change are planned. Trace the concrete change through these functions and identify the maintenance burden. Recommend the smallest useful improvement; do not edit.",
+    "acceptance": [
+      "Names the change scenario and follows the write path through both importers and Store.",
+      "Connects coordinated edits to duplicated format, conversion, validation, or ordering knowledge.",
+      "Separates observed burden from speculative future requirements."
+    ],
+    "reject": [
+      "Counts lines or repeated syntax without explaining a change dependency.",
+      "Calls the design complex without identifying caller-visible knowledge or edits."
+    ],
+    "mode": "review"
+  },
+  {
+    "id": "combine-shared-record-policy",
+    "skill": "posd-module-boundaries",
+    "fixture": "fixtures/importers.py",
+    "request": "Should record construction and validation move behind a shared boundary? Compare the current arrangement with a bounded alternative and preserve source-specific meaning. Do not edit.",
+    "acceptance": [
+      "Identifies the shared schema, timestamp conversion, validation, and write-order invariant.",
+      "Keeps source-specific kind interpretation at an appropriate owner.",
+      "Compares caller and maintainer costs for the current and proposed boundary."
+    ],
+    "reject": [
+      "Combines modules merely because they run consecutively or have similar lines.",
+      "Splits every helper into a new abstraction without a coherent contract."
+    ],
+    "mode": "review"
+  },
+  {
+    "id": "consistency-with-meaningful-differences",
+    "skill": "posd-consistency",
+    "fixture": "fixtures/batch_writer.py",
+    "request": "Compare the three batch writers. Identify duplicated behavior worth aligning and differences that should remain. Recommend a narrow change; do not edit.",
+    "acceptance": [
+      "Recognizes matching validation and timeout retry behavior in event and audit writes.",
+      "Preserves the payment path's no-retry behavior because the fixture marks the sink non-idempotent.",
+      "Bases any consistency recommendation on observed contracts rather than syntax alone."
+    ],
+    "reject": [
+      "Applies retries to payments without accounting for duplicate side effects.",
+      "Makes all validation messages or rules identical despite domain differences."
+    ],
+    "mode": "review"
+  },
+  {
+    "id": "comments-preserve-nonobvious-truth",
+    "skill": "posd-comments",
+    "fixture": "fixtures/comments_and_units.py",
+    "request": "Review the comments and docstrings against the implementation. Correct only statements that mislead a maintainer, and explain which unit distinctions the comments should preserve. Do not edit.",
+    "acceptance": [
+      "Finds the stale seconds-to-milliseconds comment because the function compares values already in milliseconds.",
+      "Retains useful unit documentation for both retry delay functions.",
+      "Does not replace comments with line-by-line narration."
+    ],
+    "reject": [
+      "Trusts the comment over executable behavior.",
+      "Removes all unit documentation as redundant."
+    ],
+    "mode": "review"
+  },
+  {
+    "id": "compare-delivery-contracts",
+    "skill": "posd-design-twice",
+    "fixture": "fixtures/notification_designs.py",
+    "request": "Choose a notification design for a user-facing request that must report immediate delivery failure. Compare the inline and queued designs, including one credible alternative if the requirement changes. Do not edit.",
+    "acceptance": [
+      "Explains that inline delivery exposes transport failure during the call while enqueue acceptance does not mean delivery.",
+      "Keeps required behavior and constraints constant when comparing options.",
+      "Names tradeoffs and states which changed requirement could justify the queue."
+    ],
+    "reject": [
+      "Presents superficial renaming as a second design.",
+      "Recommends the queue while silently dropping immediate failure reporting."
+    ],
+    "mode": "review"
+  },
+  {
+    "id": "reduce-export-interface-depth-cost",
+    "skill": "posd-deep-modules",
+    "fixture": "fixtures/export_options.py",
+    "request": "Review the export API and its implementation. Suggest a design that gives callers a coherent operation while retaining necessary control over output. Do not edit.",
+    "acceptance": [
+      "Relates the exposed options to the behavior they control and the amount of work hidden behind the API.",
+      "Identifies which caller choices are essential versus implementation mechanics.",
+      "Offers a bounded interface direction without assuming that fewer parameters alone make a deeper module."
+    ],
+    "reject": [
+      "Equates file length or option count alone with module depth.",
+      "Removes output choices without considering caller requirements."
+    ],
+    "mode": "review"
+  },
+  {
+    "id": "review-entrypoint-scope",
+    "skill": "posd-design-review",
+    "fixture": "fixtures/document_gateway.py",
+    "request": "Review the gateway diff conceptually for design risks. Return only the few highest-value supported findings and mention what additional system context you would need. Do not edit.",
+    "acceptance": [
+      "Selects checks that bear on the requested gateway boundary instead of applying every design principle mechanically.",
+      "Cites authorization-before-read evidence and distinguishes fixture facts from system-wide unknowns.",
+      "Limits findings to actionable issues or a justified retain recommendation."
+    ],
+    "reject": [
+      "Invents unrelated recommendations about naming, performance, or formatting.",
+      "Claims a full-system security conclusion from the isolated fixture."
+    ],
+    "mode": "review"
+  },
+  {
+    "id": "generality-from-real-use-cases",
+    "skill": "posd-general-purpose",
+    "fixture": "fixtures/export_options.py",
+    "request": "The first caller only exports CSV, but two known callers also need JSON and a filtered export. Decide whether to generalize this interface and describe the smallest coherent capability. Do not edit.",
+    "acceptance": [
+      "Uses the two concrete additional use cases as evidence for any generalization.",
+      "Keeps a coherent report-export capability and distinguishes caller requirements from backend mechanics.",
+      "Rejects options for imagined formats or requirements not supplied."
+    ],
+    "reject": [
+      "Argues for maximum generality or a plugin framework from one method.",
+      "Ignores known callers to preserve a one-caller sequence."
+    ],
+    "mode": "review"
+  },
+  {
+    "id": "decision-owner-for-storage-format",
+    "skill": "posd-information-hiding",
+    "fixture": "fixtures/importers.py",
+    "request": "Review who should own storage-record representation as the format changes. Give a recommendation and state what the fixture does not establish. Do not edit.",
+    "acceptance": [
+      "Explains which format decisions should be localized and how each importer currently depends on them.",
+      "Keeps source identity and source-specific interpretation explicit in the proposed contract.",
+      "Separates what is visible in this fixture from unknown storage consumers."
+    ],
+    "reject": [
+      "Treats private fields or a helper extraction as information hiding by itself.",
+      "Hides domain meaning behind an opaque generic record."
+    ],
+    "mode": "review"
+  },
+  {
+    "id": "choose-caller-visible-export-decisions",
+    "skill": "posd-decide-what-matters",
+    "fixture": "fixtures/export_options.py",
+    "request": "Simplify this export interface for the stated CSV caller while preserving header control and the required date representation. Identify which current options should stay explicit or become defaults. Do not edit.",
+    "acceptance": [
+      "Ties each retained or hidden choice to a caller need or invariant.",
+      "Uses sensible defaults for implementation details that do not need caller control.",
+      "Preserves header and date behavior named in the request."
+    ],
+    "reject": [
+      "Removes all customization without checking requirements.",
+      "Adds more configuration for unrequested future use cases."
+    ],
+    "mode": "review"
+  },
+  {
+    "id": "name-by-role-and-contract",
+    "skill": "posd-naming",
+    "fixture": "fixtures/search_names.py",
+    "request": "Review the public names and their call-site meaning. Propose only renames that make the contract clearer, and account for compatibility before recommending changes. Do not edit.",
+    "acceptance": [
+      "Finds that process, flag, and load do not communicate the operation or returned data clearly.",
+      "Uses function behavior and the load docstring as evidence rather than suggesting names from style preference.",
+      "Notes that rename impact depends on external and serialized use not shown in the fixture."
+    ],
+    "reject": [
+      "Recommends a repository-wide rename without checking usages or compatibility.",
+      "Optimizes names for cleverness or brevity alone."
+    ],
+    "mode": "review"
+  },
+  {
+    "id": "make-unexpected-branch-obvious",
+    "skill": "posd-obvious-code",
+    "fixture": "fixtures/search_names.py",
+    "request": "A caller cannot tell whether process returns IDs or emails. Review the relevant path and recommend the smallest clarification at the point of use. Do not edit.",
+    "acceptance": [
+      "Identifies the flag-dependent return shape as the source of obscurity.",
+      "Proposes an explicit operation or result contract and accounts for existing callers.",
+      "Uses the fixture behavior instead of calling code non-obvious based on personal familiarity."
+    ],
+    "reject": [
+      "Adds comments that merely restate each line.",
+      "Claims the function is obvious because its implementation is short."
+    ],
+    "mode": "review"
+  },
+  {
+    "id": "measure-before-adding-index",
+    "skill": "posd-performance",
+    "fixture": "fixtures/search_catalog.py",
+    "request": "A proposal adds an index to speed up repeated catalog lookups. Assess the proposal from the supplied code and evidence. Do not edit or invent benchmark results.",
+    "acceptance": [
+      "Notes that the fixture shows linear scans and repeated requests but gives no catalog size, workload distribution, latency target, or measurement.",
+      "Treats the bottleneck as a hypothesis and proposes a bounded reproducible measurement with correctness checks.",
+      "Keeps the simpler implementation until evidence justifies added state and update complexity."
+    ],
+    "reject": [
+      "Claims a measured speedup or that an index is necessary without workload evidence; asymptotic cost comparisons labeled as analysis are allowed.",
+      "Ignores lookup semantics or index invalidation when discussing the tradeoff."
+    ],
+    "mode": "review"
+  },
+  {
+    "id": "move-shared-retry-mechanics-down",
+    "skill": "posd-pull-complexity-down",
+    "fixture": "fixtures/batch_writer.py",
+    "request": "Two callers repeat validation and timeout retry mechanics around write_many. Recommend whether a lower-level operation should own any of this complexity, and preserve the payment semantics. Do not edit.",
+    "acceptance": [
+      "Points to repeated caller mechanics in write_events and write_audit_records.",
+      "Proposes a lower-level contract only for genuinely shared mechanics, keeping domain validation with its owner where appropriate.",
+      "Excludes payment retries unless idempotency is guaranteed."
+    ],
+    "reject": [
+      "Moves every decision down merely because callers repeat code.",
+      "Applies retries to the non-idempotent payment batch."
+    ],
+    "mode": "review"
+  },
+  {
+    "id": "bounded-design-investment",
+    "skill": "posd-strategic-design",
+    "fixture": "fixtures/importers.py",
+    "request": "Implementing a third importer now could copy the record rules again. Describe the direct patch and a bounded design investment, then recommend one based only on this fixture and change. Do not edit.",
+    "acceptance": [
+      "Compares direct duplication with a focused shared owner for representation and validation.",
+      "Relates any design cost to the immediate third importer and specified format change.",
+      "States uncertainty about consumers or requirements absent from the fixture and avoids a broad rewrite."
+    ],
+    "reject": [
+      "Treats all future design work as waste or demands speculative architecture.",
+      "Recommends a repository-wide framework unrelated to the requested change."
+    ],
+    "mode": "review"
+  },
+  {
+    "id": "fix-optional-setting-failure-contract",
+    "skill": "posd-error-design",
+    "mode": "implementation",
+    "fixture": "fixtures/settings_store.py",
+    "request": "In an isolated temporary workspace, implement the smallest change that makes get_optional return None only for a missing key while propagating operational failures. Keep get_required unchanged. Add or run deterministic checks for missing, present, permission-failing, and transport-failing reads; report exactly what you ran.",
+    "acceptance": [
+      "The revised optional read maps only the backend's documented KeyError absence to None.",
+      "PermissionError and another operational exception propagate with their original type and cause.",
+      "get_required still propagates a missing-key KeyError, and stored non-None values are returned unchanged.",
+      "The isolated workspace includes executable checks for missing, present, and failing reads, and their results are reported accurately."
+    ],
+    "reject": [
+      "Catches Exception or otherwise converts operational failures to absence.",
+      "Changes required-setting semantics or introduces a None-valued storage sentinel.",
+      "Edits the source fixture in place, claims tests that were not run, or changes unrelated code."
+    ]
+  },
+  {
+    "id": "centralize-versioned-record-construction",
+    "skill": "posd-information-hiding",
+    "mode": "implementation",
+    "fixture": "fixtures/importers.py",
+    "request": "In an isolated temporary workspace, make the smallest refactor that gives versioned storage-record construction and validation one owner across both importers. Preserve each source kind, the exact int(seconds * 1000) conversion followed by the nonnegative-result check (including submillisecond values near zero), stored record shape, and write order. Add or run deterministic contract checks and report exactly what you ran.",
+    "acceptance": [
+      "Both importers use a single owner for schema version, timestamp conversion and record construction; storage-format validation is localized at the storage owner rather than duplicated in callers.",
+      "Each importer still writes its own kind and preserves input order.",
+      "The existing Store contract and exact record shape remain compatible.",
+      "Checks cover valid records, fractional conversion including negative submillisecond values truncated to zero, negative converted-result rejection, kinds, and order; reported results match actual runs."
+    ],
+    "reject": [
+      "Only deduplicates syntax while leaving storage-format policy split across importers.",
+      "Erases source-specific kind meaning, changes timestamp behavior, or changes write ordering.",
+      "Adds a broad plugin/framework design, edits the source fixture in place, or claims checks not run."
     ]
   }
 ]

@@ -1,0 +1,35 @@
+Review: optional-setting error contract (`settings_store.py`)
+
+Inspected: the supplied raw fixture and `skills/posd-error-design/SKILL.md`. I did not inspect a repository implementation, tests, or callers beyond the fixture. No files were edited and no commands or tests were run against the fixture.
+
+Observed contract and trace
+
+- `get_required(key)` delegates to `_backend.read(key)`. Its docstring says the backend raises `KeyError` when the setting is missing and uses other errors for failures.
+- `get_optional(key)` calls `get_required` inside `except Exception` and returns `None` for every caught exception.
+- `load_theme(settings)` maps a `None` optional result to `"system"`; otherwise it returns the stored value. The fixture states that stored values are never `None`.
+- Thus a missing `theme` reaches `load_theme` as `None` and yields `"system"`, which is the intended optional-setting behavior. An operational backend error follows the same path and also yields `"system"`. That reports a normal-looking result even though the setting could not be read. Any other exception raised by `get_required` is also suppressed.
+
+Proposed contract
+
+Make `get_optional` treat only the documented missing-key `KeyError` as absence:
+
+```python
+    def get_optional(self, key):
+        """Return None when a setting is absent. Stored values are never None."""
+        try:
+            return self.get_required(key)
+        except KeyError:
+            return None
+```
+
+With the stated backend contract, a `KeyError` means expected absence and is converted to the established `None` result. This defines absence as an ordinary optional lookup outcome. Other backend errors remain visible and propagate with their original exception and traceback; `get_optional` cannot satisfy its promised read result when the backend operation fails, so it should not mask those failures. It should not retry or terminate the process: no retry or process-level recovery policy is established in this fixture.
+
+Caller behavior and compatibility
+
+`load_theme` can remain as written: it supplies the `"system"` default only when the setting is absent, while backend failures abort this call and remain available to its caller. This is a behavior change for outages and other operational errors: they previously appeared as the default theme and would now propagate. That is necessary to preserve the absence/failure distinction. No other callers are present in the supplied fixture, so effects on callers outside it are unknown. The proposal assumes the backend's documented `KeyError` category is reserved for absence; if the backend can raise `KeyError` for operational failures too, its contract needs a distinct missing-setting signal before this catch is safe.
+
+Verification status
+
+Proposed, not tested: verify a present value is returned unchanged; a missing key produces `None`; an operational exception propagates as the same exception rather than producing `None`; and `load_theme` returns `"system"` for absence but propagates an operational read failure. No checks were run, so these are expected outcomes from the proposed contract, not observed test results.
+
+Loaded skill SHA-256: 888ab647457ef5af0b528044d77c4d098d4455b1d06a36d2eeecaa7e4273352c

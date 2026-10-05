@@ -1,0 +1,27 @@
+Assessment: `DocumentGateway` is a useful boundary despite forwarding the read to its store. It enforces an authorization contract that the storage layer does not appear to own: bytes are returned only after the actor is authorized. The two top-level helpers, by contrast, currently add no distinct behavior in the fixture and are pure forwarding functions.
+
+Evidence and trace
+
+- `DocumentGateway.read(actor, document_id)` calls `self._permissions.require_read(actor, document_id)` before calling `self._store.read(document_id)`, then returns the store result. The permission check is meaningful policy, not pass-through work. Keeping it at the gateway ensures the ordinary download and preview paths shown here share the same authorization check.
+- On an allowed read, the values flow from the caller through `gateway.read` to `require_read`, then the same `document_id` is passed to the store; the returned bytes flow back to the caller. No representation translation is shown.
+- On a denied read, the permission check occurs before storage access. If `require_read` rejects by raising, the store is not read and no content is returned. The code does not catch or translate that denial, so the authorization error propagates to the caller. The fixture does not show the permission implementation, so the exact exception type and its disclosure behavior are not inspected.
+- Storage failures likewise propagate through `DocumentGateway.read`; no recovery or error mapping is implemented here.
+- `read_for_download(gateway, actor, document_id)` and `read_for_preview(gateway, actor, document_id)` each pass the same arguments to `gateway.read` and return its result unchanged. Neither selects a policy, adapts a representation, nor handles errors in the provided code.
+
+Boundary decision
+
+Retain `DocumentGateway` as the owner of the authorization invariant. Replacing its call with direct store access would remove the only enforcement visible in this fixture and could let a caller bypass the check. The gateway earns its interface cost by providing a security boundary, even though its successful path is short.
+
+The download and preview helpers do not earn a separate abstraction on the evidence shown. If they are internal conveniences and their names are not meaningful public contracts, callers can invoke `gateway.read(actor, document_id)` directly. If they are public entry points, compatibility adapters, or intended places for distinct download/preview rules, retaining them can be justified; that contract or behavior is not present in this fixture. Before removing them, inspect their actual callers and API compatibility requirements. Do not move authorization into either helper, since that would risk inconsistent enforcement across access paths.
+
+Proposed contract and verification
+
+Keep the gateway contract explicit: `read(actor, document_id)` returns document bytes only after `require_read` succeeds, and a denial prevents store access. Keep arguments explicit because actor and document ID are local inputs to this operation; the fixture gives no evidence for a broader context object. Consider documenting the denial/error contract if callers depend on a particular error shape.
+
+If simplifying the helpers is authorized, update only demonstrated call sites and preserve any public compatibility contract. Verify with a focused test or equivalent check that an allowed read checks permission before reading and returns the stored bytes, that a denied read never calls the store and returns no content, and that storage errors propagate as intended. Also check independent actors and document IDs so the policy is applied to the request's actual values.
+
+Inspection and verification limits
+
+Inspected: only the supplied `document_gateway.py` raw fixture and the referenced `posd-abstraction-layers` skill. The repository, external dependencies, and real call sites were not inspected. Tested: nothing; no code was executed. Proposed: the contract, possible simplification of the two forwarding helpers, and verification cases above. No files in the repository were edited.
+
+Loaded skill SHA-256: `0e4d1bf06d093ead792aaffcb25d4e1253cac085b5344bcbf38b143d6d85ffcc`

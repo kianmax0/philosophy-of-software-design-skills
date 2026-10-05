@@ -1,0 +1,13 @@
+The required behavior is to let a third importer persist records under the same version-2 storage contract: convert its source timestamp from seconds to integer milliseconds, reject negative timestamps with the existing error, and write a record with the right kind while preserving write order.
+
+The challenged assumption is that each importer should know how to construct a valid stored record. Both current importers repeat the timestamp conversion, nonnegative check, and schema-version choice. Those are storage-contract rules; keeping them in each importer makes each caller responsible for remembering the same contract.
+
+**Direct patch:** Add a third importer that repeats the existing conversion and check, sets `schema_version` to 2, chooses its kind, and calls `store.write(...)`. This is the smallest local change and fits the current `Store.write(record)` interface. The continuing cost is that every importer must know the stored fields and reproduce the timestamp rule; a later contract change must be applied consistently to every importer.
+
+**Bounded design investment:** Give `Store` one operation that accepts the source timestamp and record kind, constructs and validates the canonical record, then appends a copy in order. For example, `store.write_import(timestamp_seconds, kind="session")` could convert seconds to milliseconds, reject negative values, set `schema_version`, and store the record. Each importer would retain responsibility for reading its own row fields and selecting its kind, then call that operation. The duplicated contract knowledge disappears from all importers; the added internal complexity is one focused method on the existing storage-contract owner. Keep the lower-level `write(record)` only if other callers actually need to submit already-formed records; this fixture alone does not establish such a caller.
+
+I recommend the bounded design investment. The fixture explicitly places the duplication in ownership of the storage contract, and the anticipated third importer would repeat those same rules. A single operation on `Store` centralizes that contract at its owner without introducing a broader abstraction or speculative extension mechanism. This recommendation is based only on the supplied fixture and stated change; compatibility with callers beyond them is unknown.
+
+Inspected: the provided raw fixture and the designated `posd-strategic-design` skill. Tested: nothing; no code was edited or executed. Proposed: the `Store` operation and caller migration above.
+
+Loaded skill SHA-256: 8eeff716e0c6615a15e930f8aaf85b6f32b644ffaf14a94d488e5af8e118d8d4

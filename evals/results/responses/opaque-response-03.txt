@@ -1,0 +1,25 @@
+## Assessment
+
+The fixture implements a correct linear search for a single lookup. `find_items` invokes that search once per requested ID, so with `n` catalog entries and `m` requested IDs, a batch costs up to O(mn) comparisons. That gives an index a plausible algorithmic benefit when many lookups reuse the same catalog, but the supplied evidence establishes no performance target, workload, measured bottleneck, or speedup. I would not accept the index proposal as a demonstrated performance improvement on this evidence alone.
+
+For one lookup, building an index first adds work and memory, and can be slower than scanning. For repeated lookups against an unchanged catalog, constructing a hash index once and reusing it changes the lookup work from repeated scans to expected O(n + m), with O(n) extra storage. These are complexity expectations, not measured results; actual results depend on catalog size, query count, ID characteristics, and index construction and reuse costs.
+
+## Semantics and design constraints
+
+The current implementation returns the first matching item when IDs are duplicated. A straightforward dictionary comprehension would instead keep the last item, changing behavior. An index would need to preserve first-match semantics (for example, insert only when a key is absent) if duplicates are permitted. It also needs a defined behavior for IDs that are unhashable or whose equality/hash behavior differs from the current `==` scan. The current code permits comparisons for values that need not be hashable.
+
+The returned matches are the original item objects, and `find_items` preserves the order and count of `requested_ids`; missing IDs produce `None`. A replacement should retain those behaviors. An index also becomes stale if the catalog's IDs or membership change after it is built. The API should make the reuse and invalidation boundary clear, rather than silently caching a mapping whose validity cannot be guaranteed.
+
+If measurements support the change, prefer a simple explicit index built once for a stable catalog and reused across batches. Keep `find_item` for one-off searches or callers that do not own a reusable index. Avoid maintaining a hidden cache until ownership, mutation, and invalidation semantics are established.
+
+## Evidence status
+
+- **Inspected:** The supplied `search_catalog.py` fixture and the request. The fixture is the only code and workload evidence supplied.
+- **Tested/measured:** Nothing. I did not run tests, a benchmark, or a profiler, and no before/after numbers or environment details were supplied.
+- **Proposed checks:** First establish whether repeated lookup latency or throughput is an actual requirement and which callers reuse a catalog. Benchmark the existing batch against an index built once and reused, across representative catalog sizes and batch sizes, including hits, misses, and any realistic repeated or skewed IDs. Include index construction in the total cost and report it separately so the reuse break-even is visible. Use the same environment and workload for both implementations, repeat measurements and report the range or variability. Separately check empty inputs, missing IDs, duplicate IDs, result ordering and identity, and catalog mutation/invalidation. Do not claim a speedup until those measurements show a meaningful gain under the target workload and the semantic checks pass.
+
+## Recommendation
+
+Treat the proposal as a hypothesis. The code's repeated scans identify a plausible cost in `find_items`, but without the intended workload and measurements there is no basis for deciding whether the extra index state and its correctness constraints are worthwhile. Establish the performance target and reuse pattern, then measure the bounded alternatives before adopting the index.
+
+Skill SHA-256 (`skills/posd-performance/SKILL.md`): `8c9a69ed69717abfe297a9a69d22933df6858ed279298249db2e7a1135f60466`

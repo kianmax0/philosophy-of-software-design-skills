@@ -1,0 +1,11 @@
+Assessment: no material design defect is supported by the supplied fixture. Inspected scope was only the `document_gateway.py` raw fixture in the task brief; no diff, callers, contracts, or tests were provided.
+
+The gateway owns the authorization invariant in one place: `read` calls `require_read` before asking the store for document bytes. Both `read_for_download` and `read_for_preview` delegate to that method, so this snippet does not show either path bypassing the check. The two forwarding functions add no behavior here, but their names could represent useful caller-facing entry points; without their consumers and any distinct semantics, treating them as harmful forwarding layers would be speculative.
+
+Uncertain concern to resolve with system context: the safety guarantee depends on `require_read` failing closed before returning and on callers not exposing bytes obtained through some separate path. The fixture alone does not establish either condition.
+
+Additional context needed: the actual gateway diff and contract; implementations and failure semantics of `permissions.require_read` and `store.read`; representative download and preview routes, including error handling and any caching or streaming; other document read paths; and relevant tests. These would show whether all consumers preserve the invariant and whether the named entry points carry distinct policy.
+
+Inspected: the supplied fixture only. Tested: nothing. Proposed verification: exercise denied access through both caller paths and assert the store is never read and no content is returned; inspect alternate read paths and error handling for the same invariant. No verification was run.
+
+Loaded skill SHA-256: ed35d1991adfea072aec1c7b2a6af9e7ba4ea98fee91d09983312fbeaf45cf20

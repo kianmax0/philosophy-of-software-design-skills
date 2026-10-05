@@ -1,0 +1,25 @@
+## Review: shared record construction boundary
+
+### Evidence inspected
+
+The supplied `importers.py` fixture has two import paths. `import_sessions` and `import_events` each convert `timestamp_seconds` to integer milliseconds, reject negative results with the same `ValueError` message, and construct a schema-version-2 mapping. Their only source-specific difference is `kind` (`"session"` versus `"event"`). Each then calls `store.write` once per row, retaining row order.
+
+`Store.write` is a separate persistence boundary: it rejects records whose schema version is not 2 or whose `timestamp_ms` is not an `int`, then appends a copy. Thus a normal imported row passes the importer’s timestamp policy and the store’s storage-shape check before being appended. A negative timestamp is rejected in the importer before `write`; a malformed direct `Store.write` call is checked there, but `Store.write` itself does not reject a negative integer timestamp. There is no transaction or batching behavior in the fixture.
+
+### Shared and independent knowledge
+
+The duplicated seconds-to-milliseconds conversion, nonnegative timestamp rule, and schema-version-2 record construction describe one shared import-to-storage policy. Both importers must change together if that policy changes. The `kind` value describes the source and should remain selected at each source-specific call site. `Store` owns append order, copying, and its guard on values submitted to its persistence API; that is a distinct responsibility.
+
+### Bounded alternative and comparison
+
+Add one shared constructor, for example `build_import_record(timestamp_seconds, kind)`, that performs the existing conversion, preserves the existing nonnegative check and error message, and returns the schema-version-2 mapping. Each importer calls it with its own literal kind and passes the result to `store.write`.
+
+This removes duplicated conversion, validation, and schema knowledge from the importers while keeping source meaning visible at the call sites. It adds one small interface and one call per importer, but both callers use the same coherent policy. Keep `Store.write` as the persistence boundary and retain its existing checks: it also accepts direct records, and the fixture gives no evidence that all such callers should inherit the importer-specific nonnegative rule. This leaves some overlapping shape protection between the constructor and store, but the checks guard different entry paths. Avoid adding a generic record class or combining source selection with storage: the fixture does not show a need for either, and `kind` remains a simple source-specific value.
+
+Recommendation: move the duplicated import record construction and import timestamp validation behind the shared constructor; keep source-specific `kind` selection in each importer and keep storage validation and append behavior in `Store`. Preserve `int(timestamp_seconds * 1000)` semantics, including truncation, and the current exception text. Broader call-site evidence is unavailable, so this recommendation is limited to the two supplied importers; inspect other `Store.write` callers before changing the store contract.
+
+### Status
+
+Inspected: only the task’s raw fixture and the named module-boundaries skill. Tested: no code or call paths; this was a read-only review and no tests were run. Proposed: the bounded shared-constructor change above; no files in the repository were edited.
+
+Loaded skill SHA-256: `a18035dbfc933a6f02b7982175318f5dc0a5df77a216bdecd9d195cc939a9415`

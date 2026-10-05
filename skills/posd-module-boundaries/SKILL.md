@@ -1,48 +1,41 @@
 ---
 name: posd-module-boundaries
-description: Decide whether to combine or separate functions, classes, or modules when shared knowledge couples them or unrelated responsibilities change independently
+description: Use when deciding whether to combine or separate code that shares knowledge, must be used together, duplicates work, or changes independently
 license: MIT
 ---
 
 # Module Boundaries
 
-Use this skill to decide what belongs together and what should be separate. Organize code around shared knowledge and coherent responsibilities. Code that runs consecutively does not necessarily belong together, and code in separate functions can still share an inseparable invariant.
+Use this procedure at function, class, and service boundaries. Choose the arrangement that gives the system the simplest total contracts and least duplicated knowledge. Fewer files or shorter functions alone do not make a better boundary.
 
-The principle is inspired by John Ousterhout's [Stanford discussion of combining and separating code](https://web.stanford.edu/~ouster/cgi-bin/cs190-winter18/lecture.php?topic=raftReview2). The procedure and example here are original adaptations.
+## Inputs
+
+- The requested scope and behavior, including compatibility constraints.
+- Candidate declarations, implementations, tests, and representative call paths.
+- Knowledge/invariants each part owns, how users invoke them, and which changes require coordinated edits.
 
 ## Procedure
 
-1. Establish the requested scope and behavior. Find the module declaration, public interface, implementations, and representative call sites. Record evidence as repository path, line, and relevant caller or symbol.
-2. Identify the knowledge owned by each part and the invariant connecting them. Trace a change to that knowledge: which parts must change together? Include shared state, error handling, ordering, and transaction or lifecycle rules.
-3. Compare keeping the current boundary with combining the parts. Combining is useful when they share information, each is hard to understand without the other, or the interface distributes a single invariant across callers. Explain the knowledge that becomes local.
-4. Compare separating the parts when they have distinct responsibilities, lifetimes, consumers, or reasons to change. Separation is useful when one part can expose a coherent contract without leaking the other's knowledge. Avoid decomposing merely by execution phase or line count.
-5. Recommend the arrangement with the simpler total contract for callers and maintainers. Account for internal readability, ownership, and compatibility. A cohesive public operation can contain private helpers; joining knowledge does not require one giant function.
-6. If implementation was explicitly requested and the candidate is within scope, change only the relevant boundary. Preserve observable behavior and public contracts unless the request explicitly authorizes a change. Verify representative callers and the boundary's relevant tests or checks.
+1. Describe each part's responsibility and trace one ordinary path plus relevant failure, state, transaction, or lifecycle behavior.
+2. Look for reasons to bring code together: shared change-prone information, bidirectional use together, a clear shared conceptual category, difficult cross-reading, repeated policy, or interfaces that divide one solution into caller-managed steps.
+3. Look for reasons to keep code apart: independent responsibilities, distinct reasons/lifetimes/consumers, or a general-purpose mechanism that should not know one feature's policy. “Used together” is strongest when use is bidirectional; a block cache using a hash table does not mean hash tables belong in the cache.
+4. Compare whole-system costs on both sides: interfaces added or removed, cross-calls, duplicated knowledge, caller sequencing, implementation clarity, state representation, compatibility, and ability to evolve separately.
+5. For methods, do not split by a line limit. Extract a helper when it is a separable subtask a reader can understand without its parent and the parent can use without reading the helper's implementation. A one-off helper that just logs the caller's error often adds an interface and forces cross-reading; a tiny helper can still earn its place when it names a meaningful concept, is reused, or owns an invariant.
+6. Split a public operation into multiple operations only when the original combines unrelated tasks and most callers can use the simpler operations independently. If callers must invoke both and shuttle state between them, the split likely worsens the contract. Join methods/classes when that removes interfaces, duplication, dependencies, or shared knowledge leakage.
+7. In review/read-only mode, report the proposed boundary without editing files. For an authorized interface change, first draft the contract and expected caller usage; then change only the relevant boundary and affected callers. Preserve observable behavior unless requested otherwise, and verify actual results for each call path and relevant focused checks.
+
+## Decision test
+
+Ask which decision or invariant would become local, which interfaces vanish or appear, and whether readers can understand each part independently. Keep the split if a coherent contract lets parts evolve independently; combine when the boundary only distributes a single idea across places that must be read and changed together.
+
+Retain separate general-purpose and special-purpose parts when they represent different conceptual levels. Do not merge merely because two values are related or often manipulated in the same workflow. Do not split merely because an implementation is long or has sequential phases.
 
 ## Output
 
-For reviews, report findings only. Use:
+For a review, report evidence, shared versus independent knowledge, combine/separate comparison, recommendation, and tradeoffs. For implementation, add the changed boundary, affected callers, compatibility effects, and focused verification. Identify incomplete call-site evidence.
 
-- **Evidence:** path:line and symbol or call site.
-- **Shared or independent knowledge:** what couples the parts or lets them evolve separately.
-- **Comparison:** effects of retaining, combining, or separating on callers and maintainers.
-- **Boundary opportunity:** the coherent responsibility and owner in the recommendation.
-- **Tradeoff:** migration, flexibility, or compatibility cost; say when evidence is insufficient.
+## Worked example
 
-For requested implementation, add the change made and the focused verification performed. Do not claim a design is better merely because it has fewer methods or files.
+Before: `buildMonthlyReport` is split into `readRows`, `filterRows`, `sumRows`, and `appendRows`; each helper has a coupled state parameter and none has another use. After: keep this cohesive report operation together if readers must follow the shared filtering/aggregation state; extract a helper only for a separable, meaningful subtask such as date-range validation. The invariant is that filtering and summation use the same normalized interval. If another report truly shares that rule, move it behind a clear contract with callers evidence.
 
-## Example
-
-Before: a record parser and validator both interpret byte offsets and format-version flags. Changing the format requires coordinated edits even though parsing and validation occur in separate phases.
-
-After candidate: a format reader owns byte interpretation and structural validation together, returning a stable domain record. A presentation formatter can stay separate because display policy has different consumers and no need to know those byte offsets. Verify that validation outcomes and the record contract remain unchanged.
-
-## Leave the Design Alone When
-
-- The apparent duplication represents real variation in caller needs.
-- A proposed wrapper only renames or forwards the same decisions.
-- The module boundary crosses ownership or transaction rules that are not understood.
-- The evidence comes from one contrived call site, generated code, or an incomplete trace.
-- Changing the interface would break users outside the authorized scope.
-
-Small functions are not inherently shallow, and broad modules are not automatically deep. Explain the caller cost and the hidden responsibility before recommending a change.
+Source: John Ousterhout, *A Philosophy of Software Design*, 2nd ed. (2021), Ch. 9 §§9.1–9.9, one-based physical PDF file pages 82–95. This procedure and project-original example are adaptations, not quotations.

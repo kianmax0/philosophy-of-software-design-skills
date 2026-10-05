@@ -1,0 +1,13 @@
+Independent source-fidelity review
+
+Result: No material source-fidelity or operationalization issue found that merits changing the collection.
+
+Scope audited: the supplied 215-page, 2021 second-edition PDF text in pages.json; all 17 skills/posd-*/SKILL.md files; README.md, README.zh-CN.md, CONTRIBUTING.md, and docs/sources.md. Did not inspect eval criteria or raw responses. Checked chapter/section locator placement across the full extracted text and compared the skills' strongest operational rules with the book's relevant passages, including generality (ch. 6), layers (ch. 7), complexity ownership (chs. 8–9), errors (ch. 10), design alternatives (ch. 11), comments/naming (chs. 12–16), consistency/obviousness (chs. 17–18), trends and testing (ch. 19), performance (ch. 20), and deciding what matters (ch. 21), plus the concluding principle/red-flag lists.
+
+Evidence supporting the no-findings result:
+- All 22 chapter rows in docs/sources.md align with the supplied PDF chapter starts and physical-page ranges. The skills' cited ranges and section identifiers align with those chapter/section locations; PDF pages are consistently described as one-based physical pages.
+- The operational rules preserve the book's key qualifications: generality is “somewhat” and must remain easy for today's use (posd-general-purpose); red flags prompt investigation rather than automatically establish defects (posd-design-review); caller policy and meaningful error outcomes remain visible (posd-pull-complexity-down, posd-error-design); design alternatives need substantive differences and identical scenarios (posd-design-twice); and performance claims require comparable measurements (posd-performance).
+- Ch. 19's mixed treatment is represented fairly: unit tests support refactoring, while feature-by-feature TDD can displace abstraction design; the skill does not mandate abandoning tests or a development method (posd-strategic-design, posd-design-review, README files, docs/sources.md).
+- The README and contribution contract clearly separate book principles from project-authored routing, evidence formats, implementation requirements, and examples. The standalone entrypoint routes to the 16 focused skills by task signal; each folder includes its own license file and the instructions do not require another skill at runtime.
+
+No actionable findings to send for final review.

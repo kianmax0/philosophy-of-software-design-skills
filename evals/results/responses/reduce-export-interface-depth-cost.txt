@@ -1,0 +1,58 @@
+# Review: `export_report`
+
+## Capability
+
+In caller terms, one operation should take a report and a destination, place the report's columns before its data when requested, serialize the rows under a chosen output policy, and send them to the destination. The snippet already provides one top-level call for this job.
+
+## Inspected contract and evidence
+
+The supplied `export_options.py` fixture declares:
+
+```python
+export_report(report, destination, *, delimiter=",", include_header=True,
+              date_format="iso", null_text="", quote_all=False)
+```
+
+From this implementation, a caller must know that:
+
+- `report.rows` supplies the data rows; `report.columns` is read only when `include_header` is true.
+- With a header, the function constructs a new list with `report.columns` first and then expands `report.rows` into it. Without a header, it passes `report.rows` through as-is. Thus the two paths can differ in accepted row representation and copying/iteration behavior.
+- `delimiter`, `date_format`, `null_text`, and `quote_all` are passed to `destination.write_rows` as keyword arguments. Their accepted values and precise serialization meanings are not defined here; the destination's `write_rows` contract must supply that knowledge.
+- The function returns whatever `destination.write_rows` returns, and any errors from reading the report or writing to the destination appear to propagate. These are observations from the code, not documented guarantees.
+
+There are no representative callers, destination implementation, tests, or stated compatibility constraints in the supplied evidence. I therefore cannot establish whether callers repeat these choices, rely on particular row types, or need particular failure and resource-lifecycle guarantees.
+
+## Design assessment and proposal
+
+The operation is already coherent at the call-site level: it accepts a report and destination and performs the report-to-rows handoff. The visible cost is that callers can select four low-level serialization parameters individually, while the implementation delegates their meaning to an unspecified `write_rows` method. The fixture does not show enough caller evidence to justify removing those real output choices or hiding them behind fixed policy.
+
+I would retain the one-operation boundary and make the distinction between report presentation and serialization policy explicit. A proposed contract is:
+
+```python
+export_report(report, destination, *, include_header=True,
+              output_format=DelimitedFormat())
+```
+
+`DelimitedFormat` would be an immutable, validated value describing delimiter, date rendering, null text, and quoting, with defaults matching the current defaults. `include_header` stays separate because it controls report structure, while `output_format` groups the related serialization policy and can be reused across exports. The exporter remains responsible for ordering the header and rows and for handing them to the destination. The destination contract should specify accepted row values, supported format fields, return behavior, and write-failure behavior.
+
+This proposal preserves caller control over all four output choices and makes their shared role visible. It does not reduce the number of decisions a caller must make when it needs custom serialization; it mainly gives those decisions a named, reusable contract. If callers commonly use a small set of formats, named validated format profiles could reduce repeated configuration, but the fixture alone does not establish that pattern. I would not add profiles or format-specific defaults without that evidence.
+
+Illustrative use, assuming a caller wants non-default settings:
+
+```python
+fmt = DelimitedFormat(
+    delimiter=";",
+    date_format="iso",
+    null_text="NULL",
+    quote_all=True,
+)
+export_report(report, destination, include_header=False, output_format=fmt)
+```
+
+The exact type and validation rules for each field remain to be specified from the real destination contract. This API shape is a proposal, not an observed implementation. If this is an existing public API with compatibility requirements, retain the current signature as a delegating wrapper while migrating callers; compatibility requirements were not provided.
+
+## Behavior and verification
+
+No files were edited, and no code or tests were run. The only inspected implementation is the supplied fixture. Before adopting the proposal, check the normal path with and without a header, an empty report, the supported row representations, each format setting's forwarding/serialization behavior, the destination's return value, and a destination write failure. These are proposed checks, not checks performed here. In particular, verify whether header inclusion should continue expanding an iterable into a new list while the no-header path passes the original `report.rows` object through.
+
+Loaded skill SHA-256: `93cd12865fc6a4790a9d1da42647f5ed1ccd36bd9421209781f83caac49b32d2` (`skills/posd-deep-modules/SKILL.md`).

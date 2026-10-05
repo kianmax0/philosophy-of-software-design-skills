@@ -1,0 +1,7 @@
+The supplied fixture shows a useful authorization boundary: `DocumentGateway.read` checks permission before asking the store for bytes, so the key invariant is owned in one place. I cannot identify a confirmed authorization defect from this snippet. The actual diff was not included, so change-specific effects remain unreviewed.
+
+- **The two caller helpers are pass-through layers** (`read_for_download` and `read_for_preview`). In the shown code they add no distinct policy, result handling, or contract; both require callers to traverse another name before reaching the same gateway operation. If they have no routing, compatibility, or domain meaning elsewhere, consider removing them and calling the gateway directly. Keep them if they are intentional public entry points or will own distinct behavior; that context is not shown.
+
+No tests or runtime checks were run; this was a conceptual review of the supplied fixture only. To assess the gateway diff, I would need the changed lines and representative callers, plus the contracts for `permissions.require_read` (especially denial behavior) and `store.read` (including errors and side effects). Those details determine whether the stated “never reveal denied content” guarantee holds across errors and caller responses.
+
+Loaded skill SHA-256: `ed35d1991adfea072aec1c7b2a6af9e7ba4ea98fee91d09983312fbeaf45cf20`.

@@ -2,15 +2,15 @@
 
 [English](README.md) · [来源说明](docs/sources.md) · [行为评估案例](evals/README.md)
 
-将 John Ousterhout《A Philosophy of Software Design》的设计原则转成可复用的 AI skills。每个 skill 包含具体检查步骤、结合上下文的改进建议、原创示例，以及要求证据的输出格式。
+将 John Ousterhout《A Philosophy of Software Design》的设计原则转成 coding agent 可执行、可复用的 skills。每个 skill 包含代码检查与设计取舍步骤、限定范围的实施流程、原创示例，以及可验证的产物要求。
 
-适合审查代码改动、设计接口，以及执行用户要求的重构。重点是说明调用者需要掌握哪些知识、维护者需要协调哪些修改。
+适合审查代码改动、设计新接口，以及完成用户要求的重构。重点是说明调用者需要掌握哪些知识、维护者需要协调哪些修改。
 
-这是一个独立项目。0.1 版依据作者公开的书籍页面和 Stanford 官方教学材料，覆盖选定的核心原则；尚未对全书逐章校验。操作流程和示例由本项目编写，项目与作者无隶属或背书关系。具体边界见[来源说明](docs/sources.md)。
+这是一个独立项目，已于 2026-10-05 根据提供的 **2021 年第二版完整原书**校准。[来源映射](docs/sources.md)将全书 22 章对应到具体执行流程，并标明章节、节号和 PDF 页码。原书不随仓库分发，运行 skills 无需读取原书。操作流程、示例和 agent 的证据要求由本项目编写，项目与作者无隶属或背书关系。
 
 ## 开始使用
 
-先安装 `posd-design-review` 作为总入口，再按常遇到的问题选择专用 skill。每个文件夹都是独立的 [Agent Skill](https://agentskills.io/specification)，包含 `SKILL.md` 和许可证声明，无需同时安装其他 skill。
+先安装 `posd-design-review` 作为审查、设计和实施任务的独立总入口，再按常遇到的问题选择专用 skill。每个文件夹都是独立的 [Agent Skill](https://agentskills.io/specification)，包含 `SKILL.md` 和许可证声明，无需同时安装其他 skill。
 
 在 Codex 中可以这样调用：
 
@@ -27,13 +27,21 @@
 明确现有的失败语义和顺序保证，并说明每种设计由谁掌握哪些知识。
 ```
 
+需要直接实施时：
+
+```text
+使用 $posd-strategic-design 添加指定的 importer。
+比较直接补丁与调整存储记录知识归属的局部改进，然后实施选定方案。
+保留时间转换和写入顺序，更新契约与调用者，报告实际执行的检查。
+```
+
 Claude Code 安装后可用 `/posd-design-review` 或 `/posd-design-twice`。显式调用语法及自动发现方式取决于所用的 agent。
 
 ## Skill 目录
 
 | Skill | 处理的问题 |
 | --- | --- |
-| [posd-design-review](skills/posd-design-review/SKILL.md) | 为具体审查选择相关原则 |
+| [posd-design-review](skills/posd-design-review/SKILL.md) | 为审查、设计或实施任务选择相关原则 |
 | [posd-complexity](skills/posd-complexity/SKILL.md) | 修改放大、认知负担、隐含依赖 |
 | [posd-strategic-design](skills/posd-strategic-design/SKILL.md) | 直接补丁与限定范围的设计投入如何取舍 |
 | [posd-decide-what-matters](skills/posd-decide-what-matters/SKILL.md) | 区分调用者必需控制的事项与内部选择 |
@@ -51,7 +59,7 @@ Claude Code 安装后可用 `/posd-design-review` 或 `/posd-design-twice`。显
 | [posd-obvious-code](skills/posd-obvious-code/SKILL.md) | 揭示非局部假设与意外行为 |
 | [posd-performance](skills/posd-performance/SKILL.md) | 根据实测工作负载判断性能设计 |
 
-目录按工程任务组织，不对应原书目录的逐章重建。“先写注释”和修改已有代码的实践已融入相关流程；软件趋势在具体上下文中判断，未单列一个通用清单。
+目录按工程决策组织。“先写注释”是 comments、design-twice 和总入口中的接口设计步骤；修改已有代码由 strategic-design 和注释维护流程处理。第 19 章对继承、模式、getters/setters 和测试的讨论融入相应设计判断。没有一章对应一个 skill 的要求；问题明确时使用专用 skill，需要选择检查方向时使用总入口。
 
 ## 安装
 
@@ -96,9 +104,10 @@ cp -R -n skills/posd-design-review ~/.claude/skills/
 python3 -m pip install -r requirements-dev.txt
 python3 scripts/validate.py
 python3 -m unittest discover -s tests -v
+python3 evals/results/verify_implementations.py
 ```
 
-验证器检查 frontmatter、目录命名、本地链接和独立安装边界，不能证明设计建议的质量。[行为评估案例](evals/README.md)检查具体决策，包括应保留的包装层和不应隐藏的错误。声称优于普通提示词之前，应使用独立 agent 运行案例，并记录实际输出。
+验证器检查 frontmatter、目录命名、本地链接、独立分发边界，以及评估案例的完整性和技能覆盖；它不评判设计建议。[行为评估案例](evals/README.md)覆盖全部 17 个 skills，包含审查、设计、应保留现状的案例，以及在临时工作区实施改动的任务。执行协议将任务材料与评分标准分开，并保存实际输出。实际结果见评估文档；案例通过不代表已经证明普遍优于普通提示词，也不代表验证了客户端自动发现。
 
 ## 贡献与复用
 

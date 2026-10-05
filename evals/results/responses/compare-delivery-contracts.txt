@@ -1,0 +1,32 @@
+## Decision
+
+Choose `InlineNotifier` for the stated user-facing request because the requirement is to report an immediate delivery failure. Its synchronous call gives the requesting operation a direct path to observe a failure from `transport.send`. `QueuedNotifier` can report enqueue or acceptance failure immediately, but its current contract does not report a later delivery failure to this caller. This recommendation assumes synchronous transport latency is acceptable for the request; the fixture gives no latency, availability, retry, or timeout constraints.
+
+## Designs and caller sequence
+
+**Inline design (provided).** `notify(user_id, message)` calls `transport.send(user_id, message)` synchronously and returns only after that call finishes. A plausible caller sequence is: the user submits an action that triggers a notification; the request handler calls `notify`; successful return lets the handler report success, while a send exception can be caught and shown as delivery failure. The fixture documents that callers see delivery failures immediately, but does not specify exception types, result values, timeout behavior, or retry policy.
+
+**Queued design (provided).** `notify(user_id, message)` enqueues a payload and returns after enqueueing. The same caller can report that the notification was accepted for later processing. It cannot infer delivery from that return. If downstream delivery fails after enqueueing, the current interface has no result or status channel through which this request handler can report that failure. Whether an enqueue error is raised or returned is also unspecified by the fixture.
+
+For the same boundary condition—a downstream transport failure during the user's request—the inline design can expose that failure before the request completes. The queued design cannot: at most, it can expose an enqueue failure at that time. A queue may improve responsiveness and decouple transport availability from request handling, but those properties conflict with the required delivery guarantee unless the queued contract adds a synchronous delivery wait, which would give up much of that decoupling.
+
+## Change scenario and credible alternative
+
+If the requirement changes to “accept the request promptly even when the delivery service is temporarily unavailable, and let the user check eventual delivery,” a queued design becomes appropriate. A credible contract would return an acceptance result and stable notification ID; a separate status operation would report pending, delivered, or failed. The user-facing flow would say “notification accepted” at enqueue time and expose status later, rather than claiming delivery. This needs durable queueing and a worker that records terminal outcomes; the current `QueuedNotifier` fixture alone does not establish those guarantees. The queue owner and status storage would change, and the caller would need to retain the ID and add a status path. This is a forecast for the changed requirement, not behavior present in the fixture.
+
+## Chosen contract
+
+For the current requirement:
+
+- `notify(user_id, message)` attempts delivery synchronously and completes only after the transport attempt finishes.
+- Successful return means the transport call succeeded according to its contract. A transport failure is surfaced to the caller before the request completes, so the caller can report it.
+- The notifier owns the call to the transport. The caller supplies recipient and message and handles the surfaced failure; it does not coordinate enqueueing or later status lookup.
+- Timeout, retry, idempotency, and the exact error representation remain unspecified and need decisions if they affect the user-visible request. In particular, “immediate” means visible within this synchronous request path, not a guaranteed latency bound.
+
+## Checks
+
+**Actual check:** I inspected the supplied fixture. It shows the inline method calling `send` directly and the queued method calling `enqueue`; the queued docstring explicitly distinguishes acceptance from delivery. No code was edited and no tests or runtime checks were run.
+
+**Proposed checks:** With a fake transport, make `send` fail and confirm the request path receives the failure before returning. Also exercise slow transport behavior to establish an acceptable timeout or latency bound. For the changed queued requirement, verify that enqueue acceptance is not presented as delivery, and that worker success and failure update the status associated with the returned notification ID.
+
+Evidence: loaded skill SHA-256 `e8dc805feaf3963cf12168dd856377d5cb832259ca6fbe3ddd800282699f2ae1`.

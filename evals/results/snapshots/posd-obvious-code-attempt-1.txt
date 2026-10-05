@@ -1,0 +1,29 @@
+---
+name: posd-obvious-code
+description: Find where a reader's first guess about behavior can be wrong, then make the needed information visible with the smallest design change.
+license: MIT
+---
+
+# Make code obvious to its readers
+
+Code is obvious when a reader can scan it and make a correct first guess about its meaning and behavior. Obviousness belongs to readers, not authors. A reviewer's concrete question is useful evidence; unfamiliarity alone is not proof of a design problem.
+
+Source: John Ousterhout, *A Philosophy of Software Design*, 2nd ed. (2021), Chapter 18, §§18.1–18.3 (PDF file-page numbers, pp. 171–177). This procedure adapts the chapter's examples and reader-centered test.
+
+## Procedure
+
+1. Name the reader and task: identify the entry point, expected change or behavior, representative callers, and the question a maintainer must answer. Read nearby code, types, contracts, comments, and tests.
+2. Simulate a quick first reading. What would a maintainer infer from the name, declaration, local convention, or visible control flow? Trace only enough behavior to compare that inference with what actually happens. Record path:line evidence for both.
+3. Locate the missing information. Look for vague or misleading names; implicit units, ownership, or states; hidden side effects; non-local ordering; indirect callback/event dispatch; generic pairs/containers whose fields lack domain names; a declaration type that hides the concrete type; or behavior that violates a common reader expectation.
+4. Reduce what the reader must know before adding explanation. Clarify a distinction in the name or type, expose a meaningful state in the result, simplify special cases, remove unnecessary layers, or put a useful abstraction at the visible boundary. A specialized result type with meaningful fields can be clearer than a generic pair when callers need to know what each value means.
+5. Make the remaining fact visible at the point of use. Use consistent conventions, readable whitespace and block structure, or a concise comment that explains purpose, rationale, invariant, or indirect invocation. Comments compensate for irreducible obscurity; they should supply missing information rather than narrate syntax.
+6. Check the whole path with a representative caller. Confirm the fix helps the named reader infer the correct behavior, preserves units/ownership/errors and other contracts, and does not add shallow helpers that merely split statements. If the intended behavior itself is uncertain, report that rather than deciding it for the owner.
+7. **Carry out the requested mode.** For implementation requests, make the bounded clarification, update affected callers/contracts, and run relevant tests or checks against the intended behavior. Report the edits and verification results. For review-only requests, recommend without editing.
+
+## Example
+
+Suppose a page-fetch method returns a generic pair and the caller reads `result.first()` and `result.second()`. The caller must discover which value contains records and which resumes pagination. A `PageBatch` result with `records` and `resumeToken` fields makes that distinction visible at the call site. Inspect callers before changing a public shape and update them with the contract.
+
+## Output
+
+For each finding, report the reader's question, the likely first guess, actual behavior and evidence, where the needed information is hidden, the practical misunderstanding it could cause, and a bounded clarification. For implementation, report edits, affected callers/contracts, and relevant verification results. Mention representative callers and uninspected behavior. If a quick reading gives the correct contract and no material inference burden is shown, report no finding.

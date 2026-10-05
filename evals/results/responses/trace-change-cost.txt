@@ -1,0 +1,25 @@
+## Review: importer change cost
+
+**Inspected scope:** the supplied `importers.py` fixture only: `import_sessions`, `import_events`, and `Store`. I traced the stated third-importer and timestamp-unit changes against these functions. I did not inspect other consumers or run the code.
+
+### Material finding: the storage representation is assembled at each importer
+
+In both importers, each row follows the same sequence: read `timestamp_seconds`; multiply by 1000 and truncate with `int`; reject a negative result; assemble a version-2 dictionary with the `timestamp_ms` field and importer-specific `kind`; then call `store.write`. `Store.write` separately checks version 2 and that `timestamp_ms` is an integer, and copies the record. Its class docstring also states the millisecond representation and write-order behavior.
+
+This is change amplification caused by a split storage-contract dependency. The importers own conversion, nonnegative validation, and record layout; Store owns part of the record validation and documents the unit. Adding a third importer entails another copy of the conversion, validation, and layout. If the persisted timestamp unit changes, the conversion/field contract in every importer must be reconciled with Store's key/type check and documentation. A missed importer could emit a record with the old unit or key. The repeated `kind` value is importer-specific and should remain at each call site.
+
+The boundary also obscures which layer owns the canonical representation: a reader of `Store.write` can see that it validates a record, but must inspect callers to learn how timestamps are normalized and how records are formed. No other consumers or derived values were inspected, so dependencies beyond this fixture are unknown.
+
+### Smallest useful improvement
+
+Give Store a narrow operation that accepts a timestamp in the declared source unit and a kind, and let it construct and validate the canonical record, for example `store.write_timestamp(timestamp_seconds, kind)`. The importers then pass the row's timestamp and their own kind; they no longer multiply, enforce the shared nonnegative rule, or assemble schema fields. A third importer uses the same operation. When the canonical storage unit changes, its conversion, field name, and validation contract change in one owner, with the class/API documentation updated there.
+
+Before: importer reads seconds → converts and validates → assembles versioned record → Store validates part of it and appends a copy.
+
+After: importer reads the source timestamp and chooses its kind → Store converts, validates, constructs the canonical record, and appends it.
+
+This adds a dependency on Store's timestamp-writing operation and couples that operation to the source-unit contract. It is a good fit if all importers supply seconds, as the two inspected importers do. If the third importer has a different source unit, make that unit explicit at the boundary or normalize it in that importer; do not silently treat its value as seconds. The change may also require migrating callers outside this fixture, which were not inspected.
+
+**Checks:** Static trace of the supplied fixture only. No code was edited and no behavior was executed or tested. To verify an implementation, proposed checks are: seconds convert to the intended canonical unit; negative timestamps are rejected through the shared operation; each importer preserves its kind; Store still rejects invalid records through any remaining lower-level entry point; and records retain their required ordering.
+
+**Loaded skill SHA-256:** `203285044b7860ad49e6fa4888f0f768d53a3cfe00e1bc0bdf31218214a08742`

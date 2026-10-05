@@ -1,61 +1,37 @@
 ---
 name: posd-consistency
-description: Review a concrete code change or code path for surprising inconsistency in behavior, naming, or structure, while preserving meaningful differences in units, lifecycles, and contracts.
+description: Compare similar code paths for conventions readers can safely reuse, and distinguish justified variation from surprising inconsistency.
 license: MIT
 ---
 
-# Review consistency
+# Use consistency as cognitive leverage
 
-Use consistency to help readers transfer knowledge from one part of a codebase to another. First establish whether two cases really share a contract; matching syntax alone does not prove they should behave alike.
+Consistency lets a reader transfer knowledge from one place to another: similar things should work similarly, while dissimilar things should look or behave differently. It reduces repeated learning and prevents false assumptions. Uniformity by itself is not the goal.
 
-## Inspect comparable cases
+Source: John Ousterhout, *A Philosophy of Software Design*, 2nd ed. (2021), Chapter 17, §§17.1–17.4 (PDF file-page numbers, pp. 166–170). See also Chapter 14 on consistent names and Chapter 19 §19.5 on over-applying patterns. The procedure is an original adaptation.
 
-Identify the operation, data, callers, and behavior under review. Read the relevant implementation, documentation, tests, and representative uses. For a review, report findings without editing. If an edit is requested, keep it within scope and preserve behavior outside the requested change.
+## Procedure
 
-Choose a pair or small group that a maintainer would reasonably expect to work alike: sibling APIs, related error paths, parallel state transitions, or repeated naming patterns. Compare the observable behavior and the reasons for any difference. A repository search can locate candidates, but inspect their contracts before calling them inconsistent.
+1. Identify the concrete operation or change and its callers. Read declarations, contracts, implementations, tests, and local conventions. Search to find comparison candidates, then inspect them; matching syntax is not proof of matching semantics.
+2. Select a small set a maintainer would reasonably expect to work alike: sibling methods, parallel lifecycle transitions, related error paths, repeated data representations, or the same pattern in nearby code.
+3. Compare the observable contract, not just spelling or structure: inputs and units, defaults, result meaning, side effects, ownership, errors, ordering, lifecycle, security, performance assumptions, and compatibility.
+4. State the reusable expectation established by names, documentation, an existing convention, or a shared abstraction. Show at least one ordinary caller for each case so the reader consequence is concrete.
+5. Investigate differences. Is there a real domain or compatibility constraint? Is the reason visible where a reader encounters the exception? If cases are semantically the same, recommend alignment. If they differ, make the distinction visible in a name, type, contract, invariant, or local explanation. Do not force dissimilar cases into one pattern.
+6. Recommend proportionally. For an established convention, follow it in the new change. Do not introduce a competing convention merely because it seems cleaner. Change an existing convention only when significant new information supports the improvement and the affected old uses can be migrated together; explain rollout and compatibility costs.
+7. Where repetition invites drift, suggest a proportionate guard: document the convention, enforce mechanically checkable rules with a tool, or use review guidance for semantic rules. Do not add tooling for a one-off difference without demonstrated recurrence.
+8. **Carry out the requested mode.** For implementation requests, make the bounded alignment or clarification, update affected callers/contracts, and verify both sides still satisfy their intended behavior with relevant tests or checks. Report the changes and results. For review-only requests, give recommendations without editing.
 
-## Test the difference
+## Example
 
-For each apparent mismatch, ask:
+Two `parse_time` methods accept bare numeric values. One interprets them as seconds and the other as milliseconds. The shared name leads callers to transfer the wrong assumption. First inspect units and actual callers; if both represent the same domain operation, align the contract or use an explicit unit-bearing type/name. Preserve a legacy difference only when its compatibility need is real and visible.
 
-1. Would a caller reasonably infer the same behavior from the shared name, shape, or documented convention?
-2. Does the difference follow from a real semantic constraint, such as distinct units, ownership, security policy, lifecycle, or compatibility requirement?
-3. Is the reason visible where a reader encounters the exception?
-4. Would aligning the cases reduce learning, or conceal a distinction callers must understand?
+## When variation is right
 
-Prefer a shared convention when semantics match. If behavior must differ, make the distinguishing contract explicit in a name, type, documentation, or local control flow. Do not normalize away a meaningful difference merely to make code look uniform.
-
-## Recommend proportionally
-
-Describe the reader expectation, observed behavior, reason the cases differ, and practical consequence. Recommend the smallest change that makes the convention predictable: align equivalent cases, or clarify a justified exception. Include migration and compatibility effects when changing a public contract.
-
-Before recommending alignment, check the surrounding type and contract, not only
-the method name. Compare at least one ordinary caller for each case. If these
-uses are not comparable, narrow the claim or report that evidence is insufficient.
-For a requested edit, state how existing callers will retain their expected
-behavior after the convention is changed.
-
-### Example
-
-Two parsers both accept timestamps and expose `parse_time`, but one interprets bare values as seconds and the other as milliseconds. Matching names suggest one contract, while the units materially differ. Either give both APIs an explicit unit-bearing type/name or route them through a shared unit contract. Silently changing one parser's unit could corrupt existing callers; first inspect stored data and consumers.
-
-## Retain justified differences
-
-- Distinct units, state lifetimes, authorization rules, or failure guarantees can justify different behavior.
-- A compatibility layer may intentionally preserve a legacy convention.
-- Similar-looking code can represent separate domain concepts.
-- A one-off variation without caller impact is not automatically a defect.
-
-## Evidence to capture
-
-- The shared expectation: a common name, documented promise, or local convention.
-- The observed behavior for each side, with a path and line.
-- A caller or test showing the practical consequence.
-- The semantic or compatibility reason that may justify the difference.
-- The smallest change that would clarify or align the cases.
+- Different units, ownership, lifecycle, authorization, or failure guarantees require different behavior.
+- A compatibility adapter intentionally preserves an older contract.
+- Similar-looking code represents different domain concepts.
+- A one-off difference has no caller consequence and making it uniform would add abstraction or obscure intent.
 
 ## Output
 
-Give locations for both sides of a supported comparison, the expected convention, observed difference, evidence for or against a semantic reason, caller consequence, and a bounded recommendation. State uninspected consumers or unresolved contract questions. If no meaningful inconsistency is supported, say so.
-
-Principle provenance: John Ousterhout discusses consistency as a way to reduce reader effort in his [Stanford CS190 course materials](https://web.stanford.edu/~ouster/cs190-winter24/slides/wrapup.pdf). The comparison steps and example here are original adaptations.
+For each finding, give both locations, the reusable expectation, observed behavior, a caller-level consequence, evidence for or against a semantic reason, and the smallest alignment or clarification that preserves required behavior. For implementation, report edits, affected callers/contracts, and verification results. State the search boundary and unresolved consumers. If the comparison is unsupported, say what contract or usage evidence is missing.

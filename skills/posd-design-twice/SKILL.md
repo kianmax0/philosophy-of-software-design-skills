@@ -1,48 +1,44 @@
 ---
 name: posd-design-twice
-description: Use before committing to a new module, API, or subsystem design when the first plausible structure may constrain future changes
+description: Compare materially different interfaces, implementations, or decompositions before choosing a consequential design, including when the first approach seems obvious.
 license: MIT
 ---
 
-# Design Twice
+# Compare designs before committing
 
-Use this skill to compare genuinely different ways to assign responsibility before a design hardens. The comparison should expose costs and assumptions, not create alternatives that differ only in names, syntax, or diagram layout.
+Use alternatives to discover a simpler design. A second design is a thinking tool, not a requirement to build two systems or to seek another approval for already authorized work.
 
-The design principle is associated with John Ousterhout's *A Philosophy of Software Design*. The procedure and examples here are original adaptations. See the [Stanford CS190 book discussion](https://web.stanford.edu/~ouster/cgi-bin/cs190-winter20/lecture.php?topic=bookReview) for the principle-level source.
+## Frame the decision
 
-## Procedure
+Read the requested behavior, relevant code, representative callers, contracts, and constraints. For a new module, use concrete caller operations from the request and label assumptions. Select the level being decided: public interface, internal representation/algorithm, or subsystem decomposition. Keep required semantics constant across alternatives.
 
-1. State the concrete problem, users, required behavior, constraints, and evidence. Separate known requirements from forecasts and preferences.
-2. Sketch the simplest plausible design, including its public interface, ownership of state, and which component decides policy. Identify its largest uncertainty.
-3. Create at least one alternative that changes a meaningful design dimension: who owns a decision, state, lifecycle, or failure response. Keep required behavior and constraints constant.
-4. Compare alternatives against concrete change scenarios: a new caller, changed policy, partial failure, new data source, or scaling constraint where relevant. Trace which components and callers change.
-5. Name the costs: exposed knowledge, coordination, indirection, migration, test burden, and risks of assumptions. Use evidence where available; label forecasts as uncertain.
-6. Recommend a design only when the comparison shows a useful advantage under the stated constraints. Otherwise recommend a small, reversible step that gathers the missing evidence.
+For review or design requests, return the comparison and recommendation. For requested implementation, continue through the selected design and verification within scope.
+
+## Sketch and compare
+
+1. Sketch the first plausible approach: key signatures or data structures, state and policy owners, and one realistic caller sequence.
+2. Sketch another approach that changes a substantive dimension. An interface can change operation granularity; an implementation can keep the same interface while using a different representation. Naming changes and extra indirection around the same decisions do not constitute another design. Consider an alternative even if you expect it to lose; give its strongest plausible rationale.
+3. Walk the **same** common caller task and boundary condition through each design. For interfaces, prioritize ease of use: facts, ordering constraints, exceptional cases, and manipulations callers must perform. Also compare interface simplicity, useful generality, and implementability. For implementations, prioritize internal simplicity and relevant performance/resource constraints.
+4. Test a supported change scenario, such as another existing consumer, policy change, partial failure, or changed representation. Identify which owners and callers would need to change. Label forecasts; do not invent a speculative platform to make an option win.
+5. Use weaknesses to create a better option. If both approaches export work that belongs inside the module, seek a different abstraction rather than picking the less awkward one automatically. A synthesis is useful when it removes the weaknesses rather than accumulating both interfaces.
+6. Choose and explain the decisive tradeoff. If an unresolved constraint controls the choice, propose or run a bounded probe that can resolve it; do not pretend a speculative comparison proves the answer.
+
+## Make the choice executable
+
+Write the chosen interface contract before filling in implementation: observable behavior, arguments/results, ownership, side effects, failure semantics, and boundary conditions. If that contract is difficult to explain independently of implementation, revisit the design.
+
+For requested edits, implement the selected in-scope option, migrate affected callers, and check the scenarios used in the comparison. Reconsider the choice if implementation reveals a new dependency; a sketch is not a frozen design. Report actual checks separately from proposed ones.
+
+## Original example
+
+A reservation operation must select an available slot and reserve it without races. Design A exposes `available_slots()` plus `reserve(slot)`; callers choose a slot and handle a stale availability result. Design B exposes `reserve_matching(criteria)` and lets the reservation owner select and reserve atomically. Walk both through two competing callers and the no-match case. B hides coordination when the owner can enforce atomicity; A may be needed when caller-specific ranking cannot be expressed simply as criteria. This is a real tradeoff, not a rename of `reserve`.
+
+For B's internal implementation, compare scanning an ordered collection with maintaining an availability index while keeping its public contract fixed. The second comparison asks about update costs and measured workload, not about a second API.
 
 ## Output
 
-Present each design in the same compact format:
+Give the decision and constraints, each alternative's sketch and caller sequence, the same scenarios compared, costs and assumptions, and the chosen contract with its rationale. Include migration and verification results for implementation requests. A compact comparison is sufficient; two full implementations or exhaustive architecture documents are unnecessary.
 
-- **Responsibility:** who owns state, policy, and failure handling.
-- **Interface:** what callers must know and do.
-- **Change scenario:** components affected and why.
-- **Costs and assumptions:** supported facts versus uncertain predictions.
-- **Recommendation:** choice, rationale, and evidence that could change it.
+Retain the current design when the comparison supports it. A design can win because alternatives increase caller knowledge, coordination, or migration cost; do not manufacture a flaw to justify a change.
 
-For code review, report the comparison and recommendation only. If implementation is explicitly requested, implement only the selected in-scope design, preserve behavior and contracts, and verify the change scenarios most affected.
-
-## Example
-
-Before: a shipment service asks a global rules module for a delivery window, then separately reserves capacity. The two operations can disagree when rules change.
-
-Alternative A keeps policy global and passes the computed window into reservation. Alternative B makes the reservation owner evaluate policy and reserve atomically. These differ in policy and state ownership. Compare consistency needs, other policy consumers, and transaction limits before choosing; naming the combined operation `reserveShipment` alone is not a second design.
-
-## Leave the Current Design When
-
-- Alternatives only rephrase the same ownership structure.
-- Constraints or likely change scenarios are unknown and cannot be responsibly inferred.
-- Existing evidence shows the current design already localizes relevant change.
-- A broad redesign costs more than a small experiment or a reversible seam.
-- The requested scope does not authorize the interface or migration changes required.
-
-Do not invent hypothetical requirements to justify complexity. Prefer a focused comparison over exhaustive architecture diagrams, and make uncertainty visible.
+Source: Ousterhout, *A Philosophy of Software Design*, second edition (2021), ch. 11 (PDF pp. 112–115); ch. 15 §§15.2–15.3 (PDF pp. 155–156). PDF pages are one-based file pages, not printed page numbers. [Author's book page](https://web.stanford.edu/~ouster/cgi-bin/book.php). Procedures and examples are original adaptations.

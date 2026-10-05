@@ -1,68 +1,41 @@
 ---
 name: posd-information-hiding
-description: Use when a design change exposes internal decisions across modules or makes callers depend on details likely to change
+description: Use when the same change-prone decision appears in multiple modules or a caller depends on another module's representation
 license: MIT
 ---
 
 # Information Hiding
 
-Use this skill to review whether a design keeps change-prone decisions local.
-Information hiding means a module owns a decision and presents a contract that
-lets other code work without knowing how that decision is implemented. The
-goal is to reduce the number of places that must change together; it does not
-mean concealing behavior from maintainers or making every field private.
+Use this procedure to locate knowledge that should change in one place. Information hiding is ownership of a change-prone decision behind a useful contract; making fields private or adding a wrapper does not establish it by itself.
 
-## Inputs and evidence
+## Inputs
 
-Inspect the relevant module contracts, implementations, tests, and call sites.
-List the design decisions visible at each boundary, such as a storage format,
-retry policy, parsing rule, or vendor API. For each suspected leak, show where
-another module relies on it and what change would force that caller to change.
-Use file paths with line numbers or symbols. A single implementation behind an
-abstraction is not evidence of needless indirection by itself.
+- The requested behavior/change and the suspected decision, such as a file format, parsing rule, retry policy, storage representation, or protocol detail.
+- Relevant module interfaces and implementations, tests, and all discoverable call sites that depend on the decision.
+- A concrete example of what changes when that decision changes, if available.
 
-## Review procedure
+## Procedure
 
-1. Name the behavior callers require without naming its current implementation.
-2. Trace one important decision from where it is made to every place that depends
-   on it.
-3. Ask whether the dependency reflects an actual caller requirement or merely
-   exposes an internal representation. Check tests and callers before
-   deciding.
-4. When internal knowledge leaks, propose a contract that expresses caller intent
-   and lets the owning module make the decision. Keep information needed for
-   legitimate caller control in the contract.
-5. Check whether the change localizes future edits without creating a vague
-   interface, hidden global state, or an extra forwarding layer. Trace error
-   and lifecycle behavior as well as the happy path.
+1. Describe the required behavior without naming the current representation or mechanism.
+2. Trace where the decision is defined and every place that relies on it. Inspect both visible leakage (public types, signatures, returned collections, defaults, errors) and back-door leakage (multiple implementations independently interpreting the same format or invariant).
+3. Check whether the dependency is an actual caller requirement or an implementation detail. A representation remains part of the effective interface when callers must know it to use the module correctly, even if it is private or undocumented.
+4. Look for temporal decomposition: separate stages may share knowledge because they happen at different times. Compare the information each stage needs; runtime order alone is not a reason to split modules.
+5. Choose the smallest ownership change supported by evidence: combine tightly coupled code, move the decision into one existing owner, or extract a cohesive owner with a genuinely simpler contract. Do not extract a nominal “abstraction” that republishes most of the same knowledge.
+6. Keep caller-required choices visible. Check that the new contract does not hide required tuning, lifecycle, security, or error information, and that it avoids broad forwarding layers or hidden global state.
+7. In review/read-only mode, report the proposed ownership change without editing files. For an authorized interface change, first draft the contract and expected caller usage; then update only affected modules/callers and preserve behavior unless requested otherwise. Verify actual results by tracing the same dependency and representative success/failure paths again.
 
-For an implementation request, change the narrowest boundary that owns the
-decision, update only affected callers, and preserve observable behavior
-unless the request says otherwise. Do not convert a focused finding into a
-repository-wide encapsulation campaign.
+## Decision test
+
+The design hides information when a change to the decision can be made at its owner without coordinated edits elsewhere, while callers can still express legitimate needs. Partial hiding can be useful: rare controls can live behind separate operations so ordinary callers need not learn them.
+
+Retain or expose a decision when callers truly need it to meet different requirements, such as meaningful performance tuning. Do not confuse hidden implementation with unknowable behavior: the contract must still explain relevant guarantees and limits.
 
 ## Output
 
-Provide the decision that is exposed, evidence of the dependency it creates,
-and the proposed boundary or reason to retain the current one. For code
-changes, name affected contracts and callers and report relevant checks.
-Separate observed facts from predictions about future change.
+Name the decision, its owner, each observed dependency, the edits a change would require today, and the focused boundary change or reason to retain it. Separate observed dependencies from predicted change impact; identify uninspected callers and relevant verification.
 
-## Example
+## Worked example
 
-Before: a report builder reads `store.rootDir + "/v3/records.json"` and
-implements its own fallback when the file is absent. After: it calls
-`recordStore.listRecent()` and handles an explicit empty result. The store
-owns file layout and missing-file semantics; the report builder retains its
-own presentation policy.
+Before: a thumbnail job reads `cacheRoot + "/v2/" + imageId + ".bin"`, while cleanup independently reconstructs the same path and version rule. After: both call `thumbnailStore.load(imageId)` / `thumbnailStore.remove(imageId)`; the store owns path layout and versioning. The invariant is that a cache-format change edits one owner, while callers retain the choice of whether a miss triggers regeneration.
 
-## Leave the design alone when
-
-- Callers truly need to choose or inspect the detail as part of their task.
-- The boundary represents a required protocol, security check, or platform
-  contract.
-- An added interface would merely rename one operation and provide no local
-  decision or stable contract.
-- The alleged leak has no demonstrated dependency or plausible change impact.
-
-Principle provenance: John Ousterhout's [Stanford CS190 Modular Design](https://web.stanford.edu/~ouster/cgi-bin/cs190-winter18/lecture.php?topic=modularDesign). The workflow and example here are original adaptations.
+Source: John Ousterhout, *A Philosophy of Software Design*, 2nd ed. (2021), Ch. 5 §§5.1–5.10, one-based physical PDF file pages 44–54. This procedure and project-original example are adaptations, not quotations.

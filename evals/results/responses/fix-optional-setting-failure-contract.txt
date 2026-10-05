@@ -1,0 +1,26 @@
+Implemented the optional-setting failure contract in the isolated workspace `/tmp/posd-calibration-20261005/implementations/fix-optional-setting-failure-contract`.
+
+Changed `settings_store.py` so `get_optional` catches only `KeyError`, returning `None` for a missing key. Permission and transport errors now propagate with their original exception type, object, and context. `get_required` is unchanged. The operation remains a read and does not alter backend state. For `load_theme`, genuine absence still selects the `system` default; an operational failure now aborts that call and remains available to its caller for handling.
+
+Condition handling:
+
+- Missing key: the backend read raises `KeyError`; `get_optional` returns `None`, satisfying its absence contract. The key and missing category are represented by the `KeyError`. The caller can continue using the ordinary missing-value result.
+- Present key: the backend returns the stored value; `get_optional` returns it unchanged. No failure handling is needed.
+- Permission failure: the backend raises `PermissionError`; `get_optional` lets the same exception propagate. The read aborts at the caller boundary; no successful value or default is reported. Exception type, object, and message context are preserved.
+- Transport failure: the backend raises `ConnectionError`; `get_optional` lets the same exception propagate. The read aborts at the caller boundary; no successful value or default is reported. Exception type, object, and message context are preserved.
+
+Compatibility: `get_required` retains its direct backend delegation and continues to propagate backend failures unchanged. Callers of `get_optional` that previously relied on permission or transport errors being silently converted to `None` will now observe those failures and may need to handle them. No callers beyond the supplied fixture were available in this isolated task.
+
+Checks added at `/tmp/posd-calibration-20261005/implementations/fix-optional-setting-failure-contract/check_settings_store.py`. Exact command run:
+
+`cd /tmp/posd-calibration-20261005/implementations/fix-optional-setting-failure-contract && ./check_settings_store.py`
+
+Result: exit code 0; all 5 checks passed: missing optional key returns `None`, present optional key returns its value, permission failure propagates, transport failure propagates, and required read propagates its failure unchanged. These checks use a deterministic fake backend; they verify exception propagation at the `SettingsStore` boundary, not real operating-system permissions or a live transport.
+
+Artifacts:
+
+- `/tmp/posd-calibration-20261005/implementations/fix-optional-setting-failure-contract/settings_store.py`
+- `/tmp/posd-calibration-20261005/implementations/fix-optional-setting-failure-contract/check_settings_store.py`
+- This response: `/tmp/posd-calibration-20261005/responses/fix-optional-setting-failure-contract.txt`
+
+Final evidence note: loaded skill `/Users/kuhn/Desktop/philosophy-of-software-design-skills/skills/posd-error-design/SKILL.md`; SHA-256 `888ab647457ef5af0b528044d77c4d098d4455b1d06a36d2eeecaa7e4273352c`.

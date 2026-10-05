@@ -2,6 +2,7 @@
 """Validate skill packaging and local Markdown links without network access."""
 
 import argparse
+import json
 import re
 from pathlib import Path
 from urllib.parse import unquote, urlsplit
@@ -103,7 +104,8 @@ def validate_links(path, root, skill_root=None):
 
 def validate_repository(root):
     errors = []
-    skill_dirs = sorted(path for path in (root / "skills").iterdir() if path.is_dir())
+    skills_path = root / "skills"
+    skill_dirs = sorted(path for path in skills_path.iterdir() if path.is_dir()) if skills_path.is_dir() else []
     if not skill_dirs:
         errors.append("no skill directories found")
     for folder in skill_dirs:
@@ -119,7 +121,81 @@ def validate_repository(root):
             "{}: {}".format(relative, error)
             for error in validate_links(path, root, skill_root)
         )
+    errors.extend(validate_evaluation_cases(root))
     return skill_dirs, errors
+
+
+def validate_evaluation_cases(root):
+    """Check that every skill has a runnable, reviewable case in the corpus."""
+    cases_path = root / "evals" / "cases.json"
+    if not cases_path.is_file():
+        return ["missing evals/cases.json"]
+    try:
+        cases = json.loads(cases_path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, UnicodeError) as error:
+        return ["invalid cases.json: {}".format(error)]
+    if not isinstance(cases, list) or not cases:
+        return ["cases.json must contain a nonempty array"]
+
+    skill_dirs = {
+        path.name for path in (root / "skills").iterdir() if path.is_dir()
+    } if (root / "skills").is_dir() else set()
+    eval_root = (root / "evals").resolve()
+    ids = set()
+    covered_skills = set()
+    errors = []
+    for index, case in enumerate(cases):
+        label = "case {}".format(index + 1)
+        if not isinstance(case, dict):
+            errors.append("{} must be an object".format(label))
+            continue
+        case_id = case.get("id")
+        if not isinstance(case_id, str) or not re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", case_id):
+            errors.append("{} id must be a lowercase hyphenated string".format(label))
+        elif case_id in ids:
+            errors.append("duplicate case id: {}".format(case_id))
+        else:
+            ids.add(case_id)
+
+        skill = case.get("skill")
+        if not isinstance(skill, str) or skill not in skill_dirs:
+            errors.append("{} references unknown skill: {}".format(label, skill))
+        else:
+            covered_skills.add(skill)
+
+        mode = case.get("mode")
+        if not isinstance(mode, str) or mode not in {"review", "implementation"}:
+            errors.append("{} mode must be review or implementation".format(label))
+
+        fixture = case.get("fixture")
+        if not isinstance(fixture, str) or not fixture.strip():
+            errors.append("{} fixture must be a nonempty relative path".format(label))
+        elif Path(fixture).is_absolute():
+            errors.append("{} fixture must be a relative path: {}".format(label, fixture))
+        else:
+            fixture_path = (eval_root / fixture).resolve()
+            try:
+                fixture_path.relative_to(eval_root)
+            except ValueError:
+                errors.append("{} fixture escapes evals directory: {}".format(label, fixture))
+            else:
+                if not fixture_path.is_file():
+                    errors.append("{} missing fixture: {}".format(label, fixture))
+
+        request = case.get("request")
+        if not isinstance(request, str) or not request.strip():
+            errors.append("{} request must be a nonempty task instruction".format(label))
+        for criterion in ("acceptance", "reject"):
+            values = case.get(criterion)
+            if not isinstance(values, list) or not values or any(
+                not isinstance(value, str) or not value.strip() for value in values
+            ):
+                errors.append("{} {} must be a nonempty list of criteria".format(label, criterion))
+
+    uncovered = sorted(skill_dirs - covered_skills)
+    if uncovered:
+        errors.append("evaluation corpus does not cover skills: {}".format(", ".join(uncovered)))
+    return errors
 
 
 def main():
@@ -134,7 +210,7 @@ def main():
         print("ERROR: {}".format(error))
     if errors:
         return 1
-    print("Validated {} skills and local Markdown links. Behavior is evaluated separately.".format(len(skills)))
+    print("Validated {} skills, local Markdown links, and evaluation cases. Behavior is evaluated separately.".format(len(skills)))
     return 0
 
 

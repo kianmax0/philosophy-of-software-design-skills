@@ -1,0 +1,7 @@
+Independent reviewer follow-up, 2026-10-05
+
+All three fixes verified. prepare_eval.py emits an opaque hash-based task ID; the output-boundary regression checks omit rubric fields and semantic IDs. validate.py rejects list/dict/null/int modes without crashing. check_contract.py now accurately names its schema/type checks and preserves the original legacy kind acceptance; its original comment version is retained.
+
+Reviewer reran two targeted maintenance tests, the four independent implementation replay tests, and check_contract.py. All passed. No remaining issue within the requested review scope was reported.
+
+This file records the reviewer follow-up delivered through collaboration messages; initial written findings are in tooling-review-initial.txt.

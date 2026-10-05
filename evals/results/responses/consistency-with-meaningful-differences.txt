@@ -1,0 +1,29 @@
+Review of the three batch writers
+
+Scope and evidence
+
+I compared only the supplied `batch_writer.py` raw fixture. I did not inspect repository files, declarations, tests, callers beyond these three entry points, or local conventions. No code was edited and no tests or runtime checks were performed. The operations themselves are the only caller-level evidence available, so downstream consumers and any external contracts remain unresolved.
+
+Shared expectation: all three operations accept a batch and sink, validate records before writing, and pass the batch to `sink.write_many` in its existing input order. The fixture shows no sorting or other reordering. For `write_events`, the per-item `id` validation completes before any sink call; for `write_audit_records`, the same is true of `actor`; for `write_payment_batch`, the `amount_cents` checks likewise complete before submission. A caller can therefore expect invalid input to fail before this operation submits the batch, and valid input to be submitted in input order.
+
+Finding 1: `write_events` and `write_audit_records` duplicate a retry policy that appears semantically shared.
+
+- Locations: `write_events` and `write_audit_records`, specifically their `range(3)` loops around `sink.write_many(...)` and their `TimeoutError` handlers.
+- Reusable expectation: these two operations make up to three total submission attempts, retry only on `TimeoutError`, return after a successful submission, and re-raise the timeout after the third failed attempt. Their similar contracts and identical control flow make this behavior reasonable for a maintainer to transfer between them.
+- Observed behavior and caller consequence: after event IDs or audit actors have been validated, the corresponding caller may see the same batch submission retried up to two times when the sink times out. The validation remains outside the retry loop, so each item is validated once per operation, not once per attempt. The order and contents passed on each attempt are unchanged.
+- Evidence about semantic reason: the fixture gives no reason for these two retry rules to differ; it gives no difference. The matching rules are evidence in favor of alignment. No broader caller or sink contract was available to confirm how timeouts relate to partial writes.
+- Narrow recommendation: consider one small, clearly named helper for the retryable `write_many` operation, used only by these two writers, while keeping each writer's domain validation in place. Preserve three total attempts and the current timeout-only retry behavior. Do not route payments through this helper. If the potential partial-write semantics make retries unsafe for either of these two operations, that contract needs to be established before consolidating them.
+
+Finding 2: `write_payment_batch` has a meaningful one-attempt difference that should remain explicit.
+
+- Locations: `write_payment_batch`, its direct `sink.write_many(payments)` call, and its docstring.
+- Reusable expectation: batch submission preserves input order and occurs only after validation, as in the other operations. A shared name and sink method do not establish that every operation has the same retry guarantee.
+- Observed behavior and caller consequence: after confirming every `amount_cents` is positive, this writer submits once and propagates any sink error directly. Callers do not risk a second submission after a timeout. The docstring says the sink is not idempotent and explains why payment submission is intentionally single-shot.
+- Evidence about semantic reason: the local docstring explicitly states the non-idempotency constraint. That is a concrete domain reason for the difference and is visible at the exceptional operation.
+- Narrow recommendation: preserve the single call and retain the explanation next to it. Avoid a shared helper or convention that silently retries all three writers. If names or contracts are later generalized, keep the payment single-submission guarantee visible in that contract as well.
+
+Proposed guard
+
+A focused regression check, if this code is later changed, should cover the observable boundary: events and audit records retain their three-attempt timeout behavior and stop after success; payments submit exactly once and propagate a timeout; all three validate before submitting and pass valid items in input order. These are proposed checks only; I did not run them. Given only this three-function fixture, a new broad rule or tooling mechanism is not warranted. If retry behavior recurs elsewhere, document or mechanically enforce the shared retry contract at that point.
+
+Loaded skill SHA-256: 111db4d8a227fc0a8ff2a80be1e8b873f78f887bb6e9b134b7b56d21a08acf52

@@ -1,48 +1,47 @@
 ---
 name: posd-strategic-design
-description: Choose a bounded design investment while adding a feature or fixing a defect when a local patch risks creating repeated special cases or maintenance debt.
+description: Add a feature or fix a defect while improving the affected abstraction when a local patch would accumulate special cases, hidden dependencies, or repeated workarounds.
 license: MIT
 ---
 
-# Make a strategic design investment
+# Improve the abstraction while delivering the change
 
-Deliver the requested behavior while considering how the chosen design will affect subsequent work. Use the actual change as the boundary of the exercise.
+Make a continual small design investment in the code being changed. Correct behavior is necessary, but repeatedly adding exceptions to a poor abstraction makes later work harder. The smallest diff is not automatically the simplest resulting design.
 
-## Inspect the decision
+## Understand the change
 
-Read the relevant implementation, tests, callers, and compatibility constraints. Identify the immediate fix and the design assumption it changes. For review or planning requests, provide a recommendation without modifying files; implement only when that work is requested.
+Inspect the requested behavior, working-tree state, implementation, callers, contracts, and tests. Identify the current design assumption challenged by the change. Look for repeated workarounds, one more special case, exposed internal data, or a fix repeated across consumers. Tie that pressure to concrete locations.
 
-Look for a chain of special cases, repeated caller workarounds, a new exception to a poorly owned invariant, or a fix that would need repeating in several places. Tie each observation to a location and the requested behavior.
+For review or design requests return a recommendation. For requested implementation, select and execute the in-scope improvement without treating this skill as another permission gate.
 
-## Compare three practical choices
+## Find the clean resulting design
 
-- **Direct patch:** The smallest change that correctly satisfies the requirement. Describe any extra fact future maintainers must remember.
-- **Bounded improvement:** Change the owner or interface of the affected decision so the feature fits naturally. Describe the local migration and the caller knowledge it removes.
-- **Defer the structural change:** Deliver a correct patch with its limitation recorded when a wider migration would exceed scope or available information.
+Ask: **if this requirement had existed when this component was designed, what would its interface and knowledge ownership look like?** Sketch that shape before settling for an extra conditional. Design the affected abstraction as a coherent unit, including its core operations and failure/lifecycle contract; passing the next feature test is not the design criterion.
 
-Use only choices that are plausible for this codebase. Do not turn every bug fix into an architecture exercise. Evaluate the total work of implementation, caller migration, verification, and subsequent changes that are supported by current requirements. Avoid invented future customers or numeric return-on-investment claims.
+Compare plausible choices, with effort scaled to the decision:
 
-Recommend the bounded improvement when it resolves an evidenced source of repeated complexity at an acceptable migration cost. Recommend the direct patch when the current abstraction is sound or when the supposedly better design adds more decisions than it removes.
+- **Direct patch:** correctly delivers the behavior. Identify the additional fact or exception maintainers and callers must remember.
+- **Bounded design investment:** removes the evidenced cause by adjusting the affected owner/interface. Show what caller knowledge disappears, which consumers migrate, and what internal complexity is added.
+- **Constrained compromise:** useful when a clean migration conflicts with an actual deadline, compatibility commitment, or task boundary. Seek a smaller improvement before deferring the whole issue. State the remaining cost and concrete revisit trigger.
 
-## Execute within scope
+Prefer the cleanest attainable design within the constraints, including a proactive improvement before repetition appears. Do not require an arbitrary number of callers to justify a simple useful abstraction. Do not build speculative extension hooks, plugins, or a repository-wide redesign. Retain the direct patch when the abstraction remains sound or the alternative creates more knowledge and coupling.
 
-For requested implementation, make the selected change, keep unrelated work out of the patch, and run relevant verification. A structural improvement should preserve existing behavior except for the user's requested change. If a needed public migration is outside the assignment, describe it as follow-up work instead of silently undertaking it.
+## Implement and maintain the design
 
-When a limitation remains, record the concrete trigger that would justify revisiting it. “Refactor later” does not explain what evidence should prompt action.
+For requested edits, write/update the affected interface contract first, implement the selected change, migrate in-scope callers, and keep unrelated changes out of the patch. Preserve behavior beyond the requested change. Put lasting rationale and subtle constraints near their owner in code; a commit message alone is not discoverable enough. Review changed comments against the diff and avoid duplicated explanations across modules.
 
-## Example
+Use existing behavior checks to support restructuring. For a bug, reproduce it with a failing check before the fix when feasible, then verify that check and the affected boundary. For new behavior, choose tests from the designed contract rather than letting isolated tests dictate a series of ad hoc API additions. Report actual results and any unverified compatibility constraints.
 
-A retry function has separate branches for three operations because each operation supplies a different delay constant. A fourth operation is being added. If all operations share the same retry semantics, making delay an explicit policy value may remove branching without changing callers' failure contract. If one operation is non-idempotent, the common policy must still express or retain that distinction; sharing code must not create unsafe retries.
+## Original example
 
-## Avoid false positives
+A scheduler has one branch per job category to choose a retention duration. A new category needs another branch in the scheduler and another in cleanup. If both implement the same retention rule, a single owner exposing `expires_at(job)` can absorb the decision and leave both consumers independent of categories. If cleanup has a different legal retention policy, merging the two policies hides a real distinction; keep that distinction explicit while simplifying shared mechanism.
 
-- A deadline can make a correct local patch the responsible choice.
-- A prototype with a disposable lifetime has different maintenance costs.
-- A one-off requirement does not automatically justify a general framework.
-- The principle supplies a decision criterion, not a mandatory percentage of time to spend refactoring.
+## Avoid turning investment into a slogan
+
+The book's suggested time investment and payoff curves express an investment mindset, not a validated task budget or guaranteed return. Do not impose a percentage, mandatory refactor, or universal delay. A disposable prototype or urgent compatibility fix can justify a compromise, but “we can clean it up later” alone does not assess its cost.
 
 ## Output
 
-State the requested behavior, evidenced design pressure, plausible options, selected approach, migration cost, and verification plan or results. Explain any deferred limitation with a concrete revisit trigger. Keep the recommendation proportional to the change.
+State the required behavior, challenged assumption, clean intended shape, plausible options and decisive tradeoff. For implementation requests deliver the patch, caller/contract updates, and checks with results. Record any remaining limitation with a concrete revisit trigger. A design report alone is insufficient when the user requested the change itself.
 
-Principle provenance: John Ousterhout's [Stanford CS190 Working Is Not Good Enough](https://web.stanford.edu/~ouster/cgi-bin/cs190-winter18/lecture.php?topic=working). The workflow and example here are original adaptations.
+Source: Ousterhout, *A Philosophy of Software Design*, second edition (2021), ch. 3 §§3.1–3.5 (PDF pp. 27–33), ch. 16 §§16.1–16.6 (PDF pp. 159–165), ch. 19 §§19.2–19.4 (PDF pp. 180–183). PDF pages are one-based file pages, not printed page numbers. [Author's book page](https://web.stanford.edu/~ouster/cgi-bin/book.php). Procedures and examples are original adaptations.

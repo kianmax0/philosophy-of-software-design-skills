@@ -1,0 +1,25 @@
+Review: proposed index for repeated catalog lookups
+
+Objective and workload
+
+The supplied fixture implements `find_item(items, requested_id)` as a linear scan that returns the first item whose `id` matches, or `None` if no match exists. `find_items(items, requested_ids)` calls that scan once per requested ID. For a catalog of N items and M requested IDs, this performs up to O(N×M) ID comparisons. This is the relevant potential cost in the supplied code, but no user-visible latency, throughput, memory, or other performance target was provided. The frequency and size of lookups, catalog size, ID hit/miss distribution, whether catalogs change between calls, and the runtime environment are also unspecified. The fixture's docstring says there is no demonstrated performance target.
+
+Inspected and tested evidence
+
+I inspected the supplied `search_catalog.py` fixture as text. I did not execute it, run a benchmark or profiler, inspect a candidate index implementation, or edit any files in the repository. No baseline or candidate timing, workload data, environment details, variability, or measured bottleneck evidence was supplied. Therefore there is no measured result supporting a speedup, and no claim that adding an index improves performance is justified by the available evidence.
+
+Assessment
+
+An index could be a fundamental algorithmic change for a real repeated-lookup workload: building a mapping from ID to item in O(N) and using it for M lookups is expected O(N+M) overall, with O(N) additional storage, instead of up to O(N×M) comparisons. That is an estimate based on the algorithms, not a benchmark result. The proposal is underspecified because no target, index lifetime/ownership, or correctness behavior for duplicate IDs and catalog mutation is described.
+
+The index must preserve the current contract. In particular, the scan returns the first matching item when IDs are duplicated, whereas a straightforward dictionary comprehension may retain the last one. A build loop that inserts only the first occurrence, or an explicit uniqueness guarantee validated elsewhere, would be needed to retain or intentionally redefine that behavior. The current functions return the original item objects and return `None` for missing IDs; an index should preserve those behaviors. If callers rely on the order of results, `find_items` currently preserves the order and multiplicity of `requested_ids`, including repeated requests, and an indexed version should do the same. If `items` can be mutated between lookups, a cached index can become stale; building per batch, maintaining the index alongside catalog mutations, or keeping the scan may be the appropriate choice depending on the actual lifecycle.
+
+Recommendation and bounded measurement
+
+Do not accept the speedup claim yet. First state a concrete target and representative workload: for example, the catalog and request batch sizes, lookup frequency, hit/miss and duplicate-ID distributions, mutation pattern, required result semantics, and the latency or throughput goal in the deployment environment. Then compare the existing implementation with a clearly specified index design using the same representative inputs and environment. Record the baseline before changing code; measure index construction separately and together with lookups so the cost of building or maintaining it is included at the real use boundary. Repeat runs under comparable warm-up and cache conditions and report a range or variability. Profile if the end-to-end measurement is slow, so the specific lookup cost is established rather than inferred from the loop alone.
+
+Before retaining an index, verify result identity/value, missing IDs, duplicate IDs, repeated requested IDs, output order, and behavior after catalog changes against the existing contract. Also record the extra memory and maintenance complexity. These are proposed checks only; they were not run. Keep the index only if the representative measured workload meets the stated target with a meaningful gain and the added lifecycle and correctness costs are acceptable. If measurement cannot be run, report that limitation and make no speedup claim.
+
+Measurement command/harness: none was supplied or run. Baseline result: not measured. Candidate result: not measured; no candidate implementation was supplied. Environment and run-to-run variability: not provided or measured. Identified cost: repeated linear scans are the fixture's apparent algorithmic cost, but no profile or performance result establishes that they are a material bottleneck for the intended workload.
+
+Loaded skill SHA-256 (posd-performance/SKILL.md): 8c9a69ed69717abfe297a9a69d22933df6858ed279298249db2e7a1135f60466

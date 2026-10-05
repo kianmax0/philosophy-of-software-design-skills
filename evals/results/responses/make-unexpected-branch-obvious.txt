@@ -1,0 +1,13 @@
+Finding — `process` returns different kinds of identifiers
+
+- Reader and task: A caller choosing how to use the values returned by `process` needs to know whether each string is an ID or an email address.
+- Likely first guess: The name `process` does not reveal the return contract, and the parameter `flag` does not say what behavior it selects. A caller reading `process(rows, True)` cannot infer the value type from the call.
+- Actual behavior and evidence: In the supplied `search_names.py` fixture, `process` filters active rows (line 5). When `flag` is true it returns each selected row's `email` (lines 6–7); otherwise it returns each selected row's `id` (line 8). Both branches return lists, so the distinction is not visible in the outer shape.
+- Missing information and practical consequence: The mode is hidden behind a generic boolean name. A caller can treat email strings as IDs, or vice versa, and downstream lookups or display behavior can be wrong.
+- Bounded clarification: Rename `flag` to `return_emails` and make representative calls explicit, such as `process(rows, return_emails=True)`. This makes the selected branch legible at the call site while retaining positional-call behavior. Existing callers using the keyword `flag=` would need to change to `return_emails=`; convert positional boolean calls to the named form where possible. Since no callers were supplied, check call sites before applying the rename and make it conditional on migrating keyword callers. Splitting this into separately named ID and email functions would clarify the choice further but is a larger change.
+
+Inspected: Only the provided task JSON, its `raw_fixture` (`search_names.py`), and the designated skill file. No repository files or caller implementations were inspected.
+Tested: Nothing; this was a review request, and no code was changed.
+Proposed: Rename the boolean parameter and use an explicit keyword at representative call sites, subject to checking/migrating callers as described above.
+
+Loaded skill SHA-256: 11b35423c0286cfe667524fc6b7bbe88a7e9648afe13f79fe2e9cfe1dab42470

@@ -1,74 +1,41 @@
 ---
 name: posd-abstraction-layers
-description: Use when callers at one conceptual level must understand lower-level mechanics or when a layer leaks implementation details into its clients
+description: Use when adjacent modules expose the same abstraction, forward arguments unchanged, or pass unused values through a call chain
 license: MIT
 ---
 
 # Abstraction Layers
 
-Use this skill when reviewing a boundary between conceptual levels, such as
-application behavior and storage mechanics. A useful layer presents operations
-in the vocabulary of its clients and contains the lower-level knowledge needed
-to carry them out. A layer is not automatically valuable because it has an
-interface or wrapper; its value depends on whether it removes details from the
-code above it.
+Use this procedure to check whether each layer contributes a distinct capability. Different layers should give callers a different conceptual view; a new interface, wrapper, or argument is useful only when it removes more complexity than it adds.
 
-## Inputs and evidence
+## Inputs
 
-Inspect the public contract, implementation, dependencies, and representative
-callers on both sides of the proposed boundary. Note the concepts and
-decisions each side must understand. Trace a normal operation and a failure
-path, including how errors and resource lifetimes cross the boundary. Cite
-paths with line numbers or named symbols. A pass-through adapter may be
-justified when it enforces a real protocol, security, platform, or
-compatibility contract.
+- The requested behavior/change, boundary contract, implementation, and dependencies.
+- Representative callers above the boundary and callees below it.
+- A trace of an ordinary path and a failure/resource-lifetime path, including values and errors passed between layers.
 
-## Review procedure
+## Procedure
 
-1. State each side's responsibility in its own conceptual vocabulary.
-2. Find lower-level details used directly by higher-level code: wire formats,
-   SQL, file names, vendor types, retry mechanics, or resource cleanup.
-3. Verify whether those details are repeated or constrain change. Distinguish
-   necessary caller choices from knowledge the lower layer can own.
-4. Propose a contract expressed in the higher-level task, then verify the lower
-   layer can fulfill it without exposing the mechanics again through return
-   values, errors, or configuration.
-5. Check dependency direction, error semantics, lifecycle behavior, tests, and
-   concrete call sites. Flag tradeoffs if the proposed boundary hides control
-   callers actually need.
+1. State what each layer promises in the vocabulary of its clients. Compare those promises with what each layer actually implements.
+2. Trace one operation across the boundary. Mark pass-through methods (same arguments and similar signature, with no meaningful selection, policy, validation, or adaptation) and pass-through variables (carried through methods that do not use them).
+3. For a pass-through method, ask which class owns the feature. Consider direct access to the implementer, moving functionality to the proper owner, or merging inseparable modules. Retain a forwarding method only when it contributes a real contract such as dispatch, security, compatibility, or policy.
+4. Compare the interface abstraction with the implementation representation. A useful layer may expose character ranges while storing lines, or a reliable byte stream while using packets. If callers must reproduce lower-level translation, move that mechanism behind the higher-level contract.
+5. For a pass-through value, first check whether a relevant object already has legitimate shared access to producer and consumer. If no such owner exists and several values are genuinely per-instance application state, consider a context object. Avoid a global singleton: it prevents independent instances and complicates tests.
+6. Before adopting a context, inventory every proposed field and its consumers. Keep it cohesive, immutable where possible, and no broader than the state that truly spans layers. A context is still global-like shared state: a grab-bag obscures dependencies and mutable state can create thread-safety problems. Keep explicit parameters when they clarify local data flow or prevent hidden coupling.
+7. In review/read-only mode, report the proposed boundary without editing files. For an authorized interface change, first draft the contract and expected caller usage; then remove or reshape only the demonstrated boundary. Recheck actual results for ordinary and failure behavior, ownership, dependency direction, independent instances, tests, and compatibility.
 
-For a requested change, update the smallest affected boundary and callers,
-preserving observable behavior unless explicitly changed. Do not introduce
-layers solely to match a diagram or pattern.
+## Decision test
+
+Inventory the contract burden added by interfaces, wrappers, arguments, and context fields, then name the complexity each removes. Identical signatures can be valuable for distinct implementations selected by a dispatcher; decorators can be justified when they add substantial behavior or translate an unmodifiable external interface. Similarity alone is a signal to inspect, not an automatic defect.
+
+Retain a layer that enforces a real protocol/security/compatibility boundary, contributes substantial distinct behavior, or protects clients from representation changes. Remove a pure forwarding layer when its callers can reach the actual owner safely and no useful contract would be lost.
 
 ## Output
 
-Describe the two conceptual levels, cite the leaked detail and its effect, and
-give a focused recommendation or patch. State the contract in terms callers
-can use, identify affected call sites, and report relevant checks for
-implementation work.
+Describe layer responsibilities, traced pass-throughs or abstraction mismatch, caller and failure-path evidence, alternatives considered, chosen contract/value-flow, affected call sites, compatibility tradeoffs, and verification. State why retained adapters/context fields earn their cost.
 
-When recommending retention, explain the invariant or adaptation the layer
-owns and what knowledge callers would inherit if it were removed. State the
-inspected scope and any enforcement paths or dependencies not supplied; do not
-claim whole-system correctness from one wrapper.
+## Worked example
 
-## Example
+Before: a report export request's locale and time zone travel through four formatting-neutral functions to a final renderer, which alone uses them. After: if the export pipeline already has a per-export context shared by the renderer and its creator, store the settings there; otherwise, keep explicit inputs if they make dependencies clearer. The invariant is that concurrent exports with different locales cannot affect one another. Do not add a mutable process-wide context; verify two exports independently.
 
-Before: a reminder scheduler builds a vendor SDK request, converts timestamps,
-and interprets provider error codes. After: it calls
-`deliverReminder(recipient, message, dueAt)` on a delivery layer that owns
-those mechanics and returns a stable delivery result. Scheduling policy
-remains with the scheduler.
-
-## Leave the design alone when
-
-- Higher-level code needs low-level control to satisfy a real requirement.
-- The wrapper preserves an important boundary such as authorization or protocol
-  compatibility.
-- The layer would only rename calls while forwarding all mechanics and failures
-  unchanged.
-- There is no evidence that the dependency causes duplication, coupling, or
-  meaningful change cost.
-
-Principle provenance: John Ousterhout's [Stanford CS190 Modular Design](https://web.stanford.edu/~ouster/cgi-bin/cs190-winter18/lecture.php?topic=modularDesign). The workflow and example here are original adaptations.
+Source: John Ousterhout, *A Philosophy of Software Design*, 2nd ed. (2021), Ch. 7 §§7.1–7.6, one-based physical PDF file pages 67–77. This procedure and project-original example are adaptations, not quotations.

@@ -1,51 +1,30 @@
 ---
 name: posd-decide-what-matters
-description: Simplify a proposed interface or design by identifying essential caller decisions, invariants, and exceptional details that can be hidden or given sensible defaults.
+description: Identify which requirements and ideas should shape a design, make them prominent, and hide or minimize details that need not burden callers.
 license: MIT
 ---
 
 # Decide what matters
 
-Shape a design around the facts that determine correct use. Reduce attention spent on choices the module can make without losing meaningful caller control.
+Structure a system around the few facts that determine correct use and broad understanding. Make those facts visible and central. Hide, localize, or give sensible defaults to details that do not need to affect other modules or callers. The aim is not simply the shortest API: overlooking an important policy is as costly as exposing many unimportant choices.
 
-## Establish the task
+Source: John Ousterhout, *A Philosophy of Software Design*, 2nd ed. (2021), Chapter 21, §§21.1–21.5 (PDF file-page numbers, pp. 198–201). The examples and workflow here are original adaptations.
 
-Identify the actual consumers, their required operations, and the behavior that must remain explicit. Read representative uses and relevant contracts. For a new design, use supplied requirements and label assumptions; do not invent a broad product roadmap.
+## Procedure
 
-For a review, report without editing. For requested implementation, simplify only the selected interface or code path and verify the affected behavior.
-
-## Separate decisions
-
-For each public parameter, method, option, or ordering rule, ask:
-
-1. Does changing it alter a caller-visible requirement, correctness invariant, or supported operating constraint?
-2. Is the caller the party with enough information to decide it?
-3. Can the module choose it consistently from existing information?
-4. Would a documented default serve the common case without disguising a meaningful tradeoff?
-
-Classify each candidate as essential caller control, internal choice, or uncommon extension point. Show the evidence for contested classifications. Security policy, destructive behavior, durability guarantees, units, and failure semantics can be essential even when few callers mention them.
-
-## Shape the design
-
-Make the normal correct operation easy to express. Move implementation choices behind the interface when callers do not need to control them. Give related choices one coherent owner. Keep a narrow, explicit escape hatch when there is an evidenced exceptional need.
-
-Do not merely hide options in a configuration object: that retains the caller's learning burden. Do not trade explicit required policy for a silent default. Explain what the default guarantees, when it stops applying, and how an exceptional caller chooses otherwise.
-
-Compare the current and proposed interface using a normal caller and one meaningful exceptional caller. Count decisions only as an explanatory aid; the goal is better ownership of knowledge, not the smallest possible signature.
+1. **Set the boundary.** Identify the task, actual consumers, externally imposed constraints, and behavior that must remain correct. Inspect requirements, representative callers, contracts, and current design. Mark assumptions rather than filling gaps with an imagined roadmap.
+2. **Find leverage.** Ask which solution, interface, or invariant would solve several recurring problems or let readers predict behavior in many places. Compare realistic alternatives when available. A general operation can carry more leverage than a collection of caller-specific commands; a stable invariant can eliminate repeated reasoning and special cases.
+3. **Classify what matters.** For each policy, distinction, parameter, method, special case, or ordering rule, determine whether it changes correctness, caller-visible behavior, an external constraint, or a broadly reused mental model. Then ask who has the information needed to choose it: caller, module, or system. Do not classify importance by frequency alone; rare security, durability, unit, or failure decisions may be essential.
+4. **Minimize how much matters.** Put implementation decisions with the module that can make them consistently. Use a well-supported default for common cases and keep a narrow extension for demonstrated exceptional cases. Reduce the number of places where an important invariant or policy must be understood. A configuration object does not simplify anything if callers still have to learn every option.
+5. **Emphasize essentials.** Put important distinctions where readers will see them: names, types, interface documentation, widely used operations, or the center of a shared design. Repeat a key idea only where repetition helps readers apply it consistently. Keep uncommon details localized so they do not shape unrelated interfaces.
+6. **Check both error directions.** Too many things treated as important clutter interfaces and increase cognitive load. A missed important fact hides required functionality, causes callers to recreate it, or creates unknown unknowns. Compare a normal caller and a meaningful exceptional caller to ensure the default serves the former without erasing what the latter needs.
+7. **When uncertain, make and test a design hypothesis.** State what you believe matters most, why the evidence points there, and what change follows. Evaluate the result against real use; if the hypothesis was wrong, identify the clue that could guide the next decision. Do not present a guess as an established requirement.
+8. **Carry out the requested mode.** For implementation requests, make the bounded design change, update affected callers/contracts, and verify normal and exceptional behavior with relevant tests or checks. Report edits and results. For review-only requests, give recommendations without editing.
 
 ## Example
 
-A batch reader asks every caller for a decoder, scratch-buffer size, and output encoding, although all current callers need UTF-8 records and the module can size its own buffer. A `read_records(path)` operation can hide buffer management and use a documented encoding default. A caller processing a supported legacy encoding still needs an explicit encoding option. Hiding that option would remove required behavior rather than simplify it.
-
-## When to retain detail
-
-- A policy choice belongs to the caller because only it knows the requirement.
-- An explicit argument prevents a costly or irreversible misunderstanding.
-- Existing integrations rely on an option; changing it requires a migration plan.
-- A low-frequency use case can still carry a critical invariant.
+A batch reader asks every caller to choose a scratch-buffer size, decoding implementation, and output format. If current consumers all need UTF-8 records and the module can size its own buffer, make `read_records(path)` the ordinary operation and keep the format explicit only where another supported format is required. Buffer allocation is a local implementation choice; encoding can remain an essential caller choice for a real legacy consumer. Check both caller types before settling the contract.
 
 ## Output
 
-Provide the important caller task, essential decisions and invariants, details proposed for internal ownership, normal and exceptional use examples, and any compatibility cost. Explain how the design makes the important distinctions visible. Mark unsupported assumptions.
-
-Principle provenance: the second-edition addition described on John Ousterhout's [book page](https://web.stanford.edu/~ouster/cgi-bin/book.php). The decision procedure and example here are original adaptations.
+Give the task and consumers, evidence for essential requirements and leverage points, choices moved to module ownership, defaults and exceptions, and the normal and exceptional caller experience. For implementation, report edits, caller/contract updates, and verification results. State assumptions and compatibility costs. Explain which ideas are prominent or central and which are localized, and why.

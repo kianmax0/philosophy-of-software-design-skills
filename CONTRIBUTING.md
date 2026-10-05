@@ -5,14 +5,16 @@ Improve a skill when a concrete task demonstrates a missing decision rule or a m
 ## Skill contract
 
 - Identify the engineering task and the evidence needed from code, callers, or requirements.
-- Give a procedure that changes decisions rather than a chapter summary.
+- Give a procedure that changes decisions rather than a chapter summary. Support the relevant review, design, and requested implementation modes; an implementation request must lead to code, caller/contract updates, and actual verification.
 - Require a concrete consequence and a bounded recommendation.
 - Include an exception or counterexample that prevents overgeneralization.
-- Write original examples and attribute the principle with a primary source link.
+- Write original examples and attribute the principle to the 2021 second edition by chapter/section and one-based PDF file pages. Keep source principles distinct from project-specific scope, output, and tooling conventions.
 - Preserve the user's scope. Reviews report findings; implementation requires an implementation request.
 - Keep instructions self-contained. Links to optional references must stay within the skill folder.
 
 Avoid mandatory class sizes, complexity scores without a validated definition, universal bans on wrappers or exceptions, unnecessary frameworks, and copied source passages. Document source limitations in [docs/sources.md](docs/sources.md).
+
+Do not require multiple existing callers before allowing a simple somewhat general-purpose interface. Design today's required functionality with a coherent abstraction; avoid speculative functionality. Tests support that abstraction and its refactoring, rather than replacing design with a sequence of isolated feature patches. Draft changed interface contracts before implementing mechanics, and keep lasting rationale discoverable near its owner.
 
 ## Verification
 

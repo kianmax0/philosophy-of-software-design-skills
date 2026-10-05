@@ -1,0 +1,17 @@
+Assessment
+
+`DocumentGateway` is not a problematic forwarding layer in this fixture. Its `read(actor, document_id)` method enforces a meaningful security contract: it calls `self._permissions.require_read(actor, document_id)` before calling `self._store.read(document_id)`. The class therefore owns the stated invariant, “Return bytes only when actor has read permission; never reveal denied content.” It also keeps callers from having to coordinate the permission check and store access themselves. Removing this boundary in favor of direct store access would lose that protection unless the invariant were moved to another owner.
+
+The two top-level helpers are pure forwarding functions. `read_for_download(gateway, actor, document_id)` and `read_for_preview(gateway, actor, document_id)` each pass the same three values directly to `gateway.read` and return its result unchanged. Neither selects a policy, validates or adapts inputs, nor adds a distinct permission rule. On the evidence here, they add names but no behavior or stronger contract. If their callers can safely use the gateway, the simpler interface is to call `gateway.read(actor, document_id)` directly and remove the helpers. Retain them only if their names are an intentional stable client API, or if future behavior such as download-specific auditing or preview-specific restrictions is actually added; neither is shown in this fixture.
+
+Trace and failure behavior
+
+For either helper, the ordinary path is helper → `gateway.read` → `require_read` → `store.read`; both helper and gateway return the store result unchanged. On a denied read, the permission check occurs before the store call, so the store is not reached if `require_read` rejects by raising or otherwise stopping control flow. The gateway docstring states that denied content must not be revealed. Store failures likewise have no handling or translation in the shown code and propagate through the gateway and helper. The fixture does not specify exact exception types or whether `require_read` signals denial only by raising, so those details should be confirmed against the dependency contract before treating them as established behavior.
+
+Evidence and verification
+
+Inspected: the supplied `document_gateway.py` fixture. The evidence above is from its method bodies and docstrings. No files were edited and no code was executed, so no runtime behavior or tests are claimed as verified.
+
+Proposed checks, if this boundary is implemented in a real system: verify that a permitted actor receives the stored bytes; verify that a denied actor cannot receive bytes and that the store is not called; verify how permission-check and store errors are surfaced; and inspect actual call sites before removing the two helpers to confirm they do not serve a compatibility or client-API contract.
+
+Loaded skill SHA-256: `0e4d1bf06d093ead792aaffcb25d4e1253cac085b5344bcbf38b143d6d85ffcc`

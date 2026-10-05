@@ -1,60 +1,29 @@
 ---
 name: posd-obvious-code
-description: Review a code path for behavior readers cannot infer from nearby code, names, types, or contracts, and recommend a bounded clarification.
+description: Find where a reader's first guess about behavior can be wrong, then make the needed information visible with the smallest design change.
 license: MIT
 ---
 
-# Make code obvious
+# Make code obvious to its readers
 
-Help a maintainer understand what the code does and why at the point where they need that knowledge. “Obvious” is judged from the reader's perspective and context, not from the author's familiarity with the implementation.
+Code is obvious when a reader can scan it and make a correct first guess about its meaning and behavior. Obviousness belongs to readers, not authors. A reviewer's concrete question is useful evidence; unfamiliarity alone is not proof of a design problem.
 
-## Establish the reading task
+Source: John Ousterhout, *A Philosophy of Software Design*, 2nd ed. (2021), Chapter 18, §§18.1–18.3 (PDF file-page numbers, pp. 171–177). This procedure adapts the chapter's examples and reader-centered test.
 
-Identify the requested behavior, entry point, and relevant callers. Read surrounding code, types, contracts, comments, and tests. For a review, inspect without editing. Keep requested edits in scope and preserve unrelated behavior.
+## Procedure
 
-Choose a concrete question a maintainer might ask: What does this return? Which resource is owned? What happens on retry? Can this branch be reached? Follow the control and data flow needed to answer it. Search hits are leads; inspect actual uses before treating behavior as established.
+1. Name the reader and task: identify the entry point, expected change or behavior, representative callers, and the question a maintainer must answer. Read nearby code, types, contracts, comments, and tests.
+2. Simulate a quick first reading. What would a maintainer infer from the name, declaration, local convention, or visible control flow? Trace only enough behavior to compare that inference with what actually happens. Record path:line evidence for both.
+3. Locate the missing information. Look for vague or misleading names; implicit units, ownership, or states; hidden side effects; non-local ordering; indirect callback/event dispatch; generic pairs/containers whose fields lack domain names; a declaration type that hides the concrete type; or behavior that violates a common reader expectation.
+4. Reduce what the reader must know before adding explanation. Clarify a distinction in the name or type, expose a meaningful state in the result, simplify special cases, remove unnecessary layers, or put a useful abstraction at the visible boundary. A specialized result type with meaningful fields can be clearer than a generic pair when callers need to know what each value means.
+5. Make the remaining fact visible at the point of use. Use consistent conventions, readable whitespace and block structure, or a concise comment that explains purpose, rationale, invariant, or indirect invocation. Comments compensate for irreducible obscurity; they should supply missing information rather than narrate syntax.
+6. Check the whole path with a representative caller. Confirm the fix helps the named reader infer the correct behavior, preserves units/ownership/errors and other contracts, and does not add shallow helpers that merely split statements. A renamed parameter, keyword-only signature, or new result shape can break existing positional, keyword, or external callers even when the function body is unchanged. For those recommendations, identify affected forms and an in-scope migration or compatibility path; when callers are unavailable, state that limit and make the change conditional rather than implying it is safe. If the intended behavior itself is uncertain, report that rather than deciding it for the owner.
+7. **Carry out the requested mode.** For implementation requests, make the bounded clarification, update affected callers/contracts, and run relevant tests or checks against the intended behavior. Report the edits and verification results. For review-only requests, recommend without editing.
 
-## Find the source of obscurity
+## Example
 
-Check whether the answer is hard to infer because of:
-
-- a name that suggests the wrong role or omits a consequential distinction;
-- hidden state, non-local side effects, or an implicit ordering requirement;
-- control flow routed through callbacks, wrappers, or several small helpers without a useful abstraction;
-- behavior that depends on undocumented conventions or a caller's prior action;
-- a comment or interface contract that conflicts with implementation.
-
-Explain the inference a reader must make and where evidence lives. Do not call code obscure merely because it is unfamiliar, concise, long, or uses a language feature. A helper improves clarity when it names an operation or hides details; splitting every statement can make the path harder to follow.
-
-## Make the necessary fact visible
-
-Recommend a direct name, explicit type or state transition, locally visible condition, useful abstraction, or concise comment that supplies the missing “what” or “why.” Put knowledge near the decision or behavior it explains. Preserve essential details such as units, failure semantics, ownership, and security checks. If the intended behavior cannot be inferred from evidence, report the uncertainty instead of choosing semantics on the maintainer's behalf.
-
-Trace the proposed explanation back to its source. Prefer expressing a stable
-invariant in the contract or type system, and a local exception beside the
-branch that handles it. Avoid duplicating implementation line by line in a
-comment. If a comment is necessary, check that it matches behavior and stays
-close enough to remain maintainable.
-
-### Example
-
-An API calls `save(record)` and returns `false` on a version conflict, but callers treat every `false` as a disk failure. The return value hides two distinct outcomes. An explicit result such as `Saved`, `Conflict`, and `StorageFailure` makes the contract visible and lets each caller handle the cases it actually owns. Changing this public type requires checking callers and compatibility boundaries.
+Suppose a page-fetch method returns a generic pair and the caller reads `result.first()` and `result.second()`. The caller must discover which value contains records and which resumes pagination. A `PageBatch` result with `records` and `resumeToken` fields makes that distinction visible at the call site. Inspect callers before changing a public shape and update them with the contract.
 
 ## Output
 
-For each finding, give the path and line, the reader question, the evidence needed to answer it, why that information is not visible at the use site, the consequence, and a bounded recommendation. Note uncertain or uninspected behavior. If a reader can reliably infer the contract and no material burden is supported, report that.
-
-Keep observation and inference separate. Quote only the small identifier or
-expression needed to locate behavior. Do not claim that every reader is
-confused; show the particular inference step or caller error the design
-requires. If a proposed rename or extraction changes behavior, describe that
-separately from the clarity improvement.
-
-Evidence checklist:
-
-- State the concrete reader question and where it arises.
-- Point to the code, contract, or test that answers it today.
-- Explain what extra fact the reader must infer or discover elsewhere.
-- Recommend a local change and name the behavior it must preserve.
-
-Principle provenance: John Ousterhout treats code obviousness and obscurity as design concerns in the [Stanford CS190 materials](https://web.stanford.edu/~ouster/cgi-bin/cs190-winter18/lecture.php?topic=complexity). The workflow and example here are original adaptations.
+For each finding, report the reader's question, the likely first guess, actual behavior and evidence, where the needed information is hidden, the practical misunderstanding it could cause, and a bounded clarification. For implementation, report edits, affected callers/contracts, and relevant verification results. Mention representative callers and uninspected behavior. If a quick reading gives the correct contract and no material inference burden is shown, report no finding.

@@ -1,0 +1,15 @@
+Implemented the supplied request in the isolated workspace:
+
+- `/tmp/posd-calibration-20261005/implementations/centralize-versioned-record-construction/importers.py`
+- `/tmp/posd-calibration-20261005/implementations/centralize-versioned-record-construction/check_contract.py`
+
+`make_storage_record` now owns the version-2 record shape, exact `int(timestamp_seconds * 1000)` conversion, and the subsequent nonnegative-result check. Both importers call it with their own source kind (`session` or `event`). `validate_storage_record` owns the original storage-boundary validation and is called by `Store.write`; its checks and error message remain the same as in the fixture. Each importer still writes rows in iteration order.
+
+The deterministic checks cover record shape, conversion truncation, a negative submillisecond value that becomes zero before the check, rejection of a value that converts to a negative integer, source kinds, write order, and the original storage-boundary validation failures. No callers beyond the supplied fixture were inspected.
+
+Final commands run from `/tmp/posd-calibration-20261005/implementations/centralize-versioned-record-construction`:
+
+- `python3 check_contract.py` — passed; output: `contract checks passed`.
+- `python3 -m py_compile importers.py check_contract.py` — passed; exit status 0.
+
+Loaded skill SHA-256: `b04d77b3c6e6bdc064d47081917d2d2baf02ec007a759fbca849bbb449f0b0e9` (`/Users/kuhn/Desktop/philosophy-of-software-design-skills/skills/posd-information-hiding/SKILL.md`).

@@ -1,0 +1,8 @@
+{
+  "id": "task-454e52025239",
+  "skill_path": "skills/posd-design-review/SKILL.md",
+  "mode": "review",
+  "request": "Review the gateway diff conceptually for design risks. Return only the few highest-value supported findings and mention what additional system context you would need. Do not edit.",
+  "raw_fixture": "\"\"\"Original negative fixture; a small boundary owns an authorization invariant.\"\"\"\n\n\nclass DocumentGateway:\n    def __init__(self, store, permissions):\n        self._store = store\n        self._permissions = permissions\n\n    def read(self, actor, document_id):\n        \"\"\"Return bytes only when actor has read permission; never reveal denied content.\"\"\"\n        self._permissions.require_read(actor, document_id)\n        return self._store.read(document_id)\n\n\ndef read_for_download(gateway, actor, document_id):\n    return gateway.read(actor, document_id)\n\n\ndef read_for_preview(gateway, actor, document_id):\n    return gateway.read(actor, document_id)\n",
+  "fixture_name": "document_gateway.py"
+}

@@ -1,0 +1,23 @@
+Review of supplied fixture: `search_names.py`
+
+Scope and evidence
+
+I inspected only the supplied fixture, including its declarations, local bodies, and docstring. The fixture has `process` at line 4, its `flag` branch at lines 6–7, the default return at line 8, and `load` at line 11. I did not search a repository or inspect external callers, tests, serialized/reflected names, generated bindings, or public-interface declarations. No code was edited and no tests or runtime checks were performed.
+
+`process(rows, flag=False)`
+
+At its call site in the body, `process` filters to rows whose `active` value is truthy. It then returns either the selected rows' email strings when `flag` is true, or their ID values otherwise. `process` suggests generic work on rows; it does not reveal either the active filter or the returned field. `flag` does not say what true means. A caller could easily mistake it for a general processing option or assume it controls filtering.
+
+Candidate renames: `process` → `select_active_ids_or_emails`, and `flag` → `return_emails`. The call then reads `select_active_ids_or_emails(rows, return_emails=True)`, making the filter, the two possible result kinds, and the predicate's true meaning visible. The function name is necessarily longer because one function has two different output forms. The local `rows`, `row`, and `selected` names are understandable within their short visible scope; `selected` refers to the rows that passed the active filter, so I would retain it absent a broader naming convention.
+
+Compatibility limits: these are candidate public API renames only if callers can be updated together. Since external usages and the public status of the function are unknown, I cannot establish that a direct rename is compatible. Before changing it, search known callers, imports, tests, docs, and any reflection or generated interfaces. If consumers may rely on the current name or keyword `flag`, retain a compatibility wrapper/parameter path or deprecate them across a migration period; update in-repository callers and contracts together. Search cannot establish that unknown external consumers do not exist.
+
+`load(path)`
+
+The body opens a local path as UTF-8 text and applies `json.load`, returning the decoded JSON value. `load` could mean loading any kind of resource, while the implementation specifically reads and decodes JSON. Candidate rename: `load` → `read_json_file`. This identifies both the input as a file and the decoding format. The docstring says “decoded records,” but the code does not validate that the decoded value is a collection of records; naming it `load_records` would promise more than the implementation establishes. `path` is clear in this function's local scope.
+
+Compatibility limits: the fixture does not show whether `load` is imported elsewhere or whether its name is part of a public API. Check known call sites and documented interfaces before a direct rename. If external callers are possible, preserve `load` as a compatibility alias/wrapper or deprecate it while callers migrate. I did not inspect those usages, so compatibility is unresolved.
+
+These recommendations concern naming clarity only. They do not change filtering, return values, file handling, or JSON decoding behavior. No checks were run; the only inspected material was the provided fixture.
+
+Loaded skill SHA-256: 831bfc88e8e417790378801a8b6f601337c8650a90f3a5eb2f01156125c62259

@@ -1,0 +1,18 @@
+## Review
+
+The fixture shows three callers of `sink.write_many`. `write_events` and `write_audit_records` each validate their own required field, then use the same three-attempt loop that retries only `TimeoutError` and re-raises after the third attempt. Both submit the original batch in its existing order. `write_payment_batch` validates a different domain rule and calls `write_many` once; its docstring says the sink is not idempotent and payments are intentionally submitted once.
+
+I recommend moving the repeated timeout retry mechanism into a distinct, opt-in lower-level operation, while retaining the choice to retry at the caller. For example, a sink or batch-writing helper could expose `write_many_retrying(batch)`: it submits the same batch, in the same order, up to three times when a `TimeoutError` occurs, and propagates the timeout after the third attempt. The existing `write_many(batch)` remains a single submission. The explicit operation name makes retry behavior visible at the call site and avoids silently changing the semantics of ordinary writes. The fixture supplies the three-attempt behavior in both retrying callers, so a separate attempt-count option is not needed on this evidence.
+
+The event-ID, audit-actor, and positive-payment-amount checks should stay with their respective callers. They express different input/domain requirements, and the lower-level writer cannot infer them. Each caller should continue to validate the entire batch before submitting anything. The retrying operation should preserve batch order and content across attempts; it should not add sorting, filtering, or other domain rules.
+
+The two retrying callers can replace their duplicated loops with the opt-in operation after their batches pass validation. The payment caller should continue using the single-attempt `write_many` operation, preserving its one-submission guarantee. This keeps the lower-level interface explicit about retry semantics without making retries the default for writes that may have non-idempotent effects.
+
+One operational condition remains unverified: the fixture establishes that payments are non-idempotent, but does not establish that event and audit writes are safe to repeat after a timeout. Before routing those two callers through the retrying operation, confirm that their sink operation is idempotent or otherwise safe to repeat when a timeout may occur after the sink has accepted the batch. If that cannot be guaranteed, they should retain single-attempt submission too.
+
+## Inspection and verification
+
+Inspected the supplied `batch_writer.py` raw fixture and the `posd-pull-complexity-down` skill. No repository files were inspected or edited. No code was executed and no tests or runtime behavior were verified. The contract and caller changes above are proposals only.
+
+Loaded skill SHA-256: 
+808d8bdd7f49d8e7dcfecd4e772d43a06423e202bf5a1b1ed1f9e434eb87a617

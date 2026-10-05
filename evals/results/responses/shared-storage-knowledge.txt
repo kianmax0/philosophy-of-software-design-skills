@@ -1,0 +1,26 @@
+Review: `importers.py`
+
+Required behavior
+
+Accept session and event rows, convert each row's timestamp from seconds to integer milliseconds, reject negative timestamps, and append a versioned record of the appropriate kind while preserving write order. The importers need to identify the source kind and provide its timestamp; they do not appear to need control over the persisted record layout.
+
+Observed dependencies in the supplied fixture
+
+- `import_sessions` reads `timestamp_seconds`, multiplies by 1000, truncates with `int`, checks nonnegativity, and constructs a version-2 record with `timestamp_ms` and kind `session`.
+- `import_events` independently does the same conversion and check, then constructs the same record shape with kind `event`.
+- `Store.write` independently knows the representation: it checks for `schema_version == 2` and an integer `timestamp_ms`, then appends a shallow copy. It does not check timestamp nonnegativity or the kind field.
+- `Store` documents version 2, millisecond timestamps, and write-order preservation. The two importers also rely on write order by calling `write` as they iterate.
+
+The storage format and seconds-to-milliseconds conversion are therefore repeated across the importers and the store's validation. Today, changing the record fields or schema requires coordinated edits to both importers and `Store.write` (and its docstring). Changing the timestamp conversion or its rejection rule requires edits to both importers. Those are observed dependencies in this fixture; the impact on any other callers is uninspected.
+
+Bounded recommendation
+
+Make `Store` the owner of record construction and the shared timestamp conversion by giving it a small operation such as `write_import(kind, timestamp_seconds)`. It should convert and validate the timestamp, build the current canonical record, and append it in order. The importers should extract the source timestamp and pass it with their kind. Keep kind selection visible to callers because it is source-specific information they need to supply. Define which kinds the store accepts as part of that operation's contract, since the present fixture does not show a kind validation rule.
+
+This puts the changing persisted representation and its shared conversion behind one useful contract. Adding a third importer would then require source mapping and a call to that contract, not another copy of schema fields and conversion logic. Avoid a helper that merely accepts an already-constructed record: it would leave representation knowledge in each importer. Preserve the current truncation, negative-value rejection, and append order unless the format change explicitly calls for different behavior. The current fixture's `int` conversion has edge cases (for example, non-finite values raise during conversion, and booleans pass the store's integer check); deciding to change those semantics is outside this bounded recommendation.
+
+Inspection and verification limits
+
+Inspected only the supplied raw fixture. No repository callers, tests, or other implementations were inspected, and no code was edited or tests run. Before implementing the boundary change, trace all actual `Store.write` callers and verify representative successful writes, negative timestamps, invalid kinds, and preserved ordering against the intended new format. These are proposed checks, not tests performed here.
+
+Loaded skill SHA-256: b04d77b3c6e6bdc064d47081917d2d2baf02ec007a759fbca849bbb449f0b0e9

@@ -1,0 +1,114 @@
+[
+  {
+    "id": "opaque-response-01",
+    "acceptance": [
+      {
+        "criterion": "Recognizes authorization before storage access as the layer's meaningful invariant.",
+        "met": true,
+        "evidence": "Mapped case justified-authorization-boundary. Identifies require_read before store.read as the gateway's meaningful security contract."
+      },
+      {
+        "criterion": "Retains the boundary unless an evidenced replacement preserves centralized enforcement.",
+        "met": true,
+        "evidence": "Explicitly says DocumentGateway is not problematic and direct store access loses protection unless the invariant moves to another owner."
+      },
+      {
+        "criterion": "Explains how direct storage access from callers could distribute security knowledge.",
+        "met": true,
+        "evidence": "Says the gateway keeps callers from coordinating permission and store access; direct access would lose protection absent another centralized owner."
+      },
+      {
+        "criterion": "Uses supplied code and marks uninspected enforcement paths unknown.",
+        "met": true,
+        "evidence": "Traces helper→gateway→permission→store, while noting exact denial signal, dependency contracts, and real call sites are unknown."
+      }
+    ],
+    "reject": [
+      {
+        "criterion": "Recommends deleting the layer solely because it is short or forwards a call.",
+        "triggered": false,
+        "evidence": "Retains DocumentGateway; conditional helper removal concerns two separate top-level pass-through wrappers."
+      },
+      {
+        "criterion": "Moves authorization into every caller without addressing enforcement.",
+        "triggered": false,
+        "evidence": "Does not recommend caller-owned checks."
+      },
+      {
+        "criterion": "Claims the entire system is secure from this fixture.",
+        "triggered": false,
+        "evidence": "Limits claims to fixture and requests real contracts/call sites."
+      }
+    ],
+    "outcome": "pass",
+    "limitations": "The task's exact diff and caller set are absent. The conditional recommendation to remove helper wrappers is contingent on no public API or routing role; the gateway itself is retained."
+  },
+  {
+    "id": "opaque-response-02",
+    "acceptance": [
+      {
+        "criterion": "Selects checks that bear on the requested gateway boundary instead of applying every principle mechanically.",
+        "met": true,
+        "evidence": "Mapped case review-entrypoint-scope. Focuses on authorization boundary, helper behavior, actual diff, and caller/dependency context."
+      },
+      {
+        "criterion": "Cites authorization-before-read evidence and distinguishes fixture facts from system-wide unknowns.",
+        "met": true,
+        "evidence": "States DocumentGateway.read checks permission before store access; marks diff, require_read denial behavior, store errors/side effects, and representative callers unknown."
+      },
+      {
+        "criterion": "Limits findings to actionable issues or a justified retain recommendation.",
+        "met": true,
+        "evidence": "Finds no confirmed defect; conditionally suggests helper removal only if they lack routing, compatibility, or domain meaning."
+      }
+    ],
+    "reject": [
+      {
+        "criterion": "Invents unrelated recommendations about naming, performance, or formatting.",
+        "triggered": false,
+        "evidence": "No unrelated recommendations."
+      },
+      {
+        "criterion": "Claims a full-system security conclusion from the isolated fixture.",
+        "triggered": false,
+        "evidence": "Explicitly says the snippet and missing contracts do not establish the guarantee across errors/caller responses."
+      }
+    ],
+    "outcome": "pass",
+    "limitations": "No diff was supplied, so the response appropriately limits itself to fixture-level conceptual review and asks for changed lines and representative callers."
+  },
+  {
+    "id": "opaque-response-03",
+    "acceptance": [
+      {
+        "criterion": "Notes linear scans/repeated requests and absent workload evidence.",
+        "met": true,
+        "evidence": "Mapped case measure-before-adding-index. Identifies O(mn) possible comparisons and absence of target, workload, measurements, or demonstrated bottleneck."
+      },
+      {
+        "criterion": "Treats bottleneck as a hypothesis and proposes bounded reproducible measurement with correctness checks.",
+        "met": true,
+        "evidence": "Proposes same-environment measurements including index build/reuse cost, representative sizes/hits/misses, repeated runs, and semantic checks."
+      },
+      {
+        "criterion": "Keeps simpler implementation until evidence justifies added state and update complexity.",
+        "met": true,
+        "evidence": "Recommends retaining scans absent a measured need; limits any index to explicit reuse for stable catalogs."
+      }
+    ],
+    "reject": [
+      {
+        "criterion": "Claims measured speedup or necessity without evidence.",
+        "triggered": false,
+        "evidence": "Complexity comparison is expressly labeled expectation, not measurement."
+      },
+      {
+        "criterion": "Ignores lookup semantics or index invalidation.",
+        "triggered": false,
+        "evidence": "Covers first-match duplicates, unhashable IDs/equality, identity, misses, requested order/count, and stale indexes after mutation."
+      }
+    ],
+    "outcome": "pass",
+    "limitations": "No benchmark, workload, or candidate index was run; recommendation remains conditional on target and reuse pattern."
+  }
+]

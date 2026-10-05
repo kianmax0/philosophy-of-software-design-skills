@@ -1,0 +1,13 @@
+Recommendation: make `Store` the owner of storage-record representation. Keep the importers responsible for choosing the semantic record kind (`session` or `event`) and traversing their rows, while having them pass the source timestamp and kind through a storage API that performs the seconds-to-milliseconds conversion, nonnegative check, schema-version assignment, and record construction. For example, a focused operation such as `store.write_import(timestamp_seconds, kind)` could own those format decisions and append the resulting record. Retain the existing write-order guarantee. The precise method name and whether the lower-level `write(record)` remains available depend on callers outside this fixture.
+
+Observed dependencies in the supplied fixture:
+
+- `import_sessions` and `import_events` independently multiply `timestamp_seconds` by 1000, convert with `int`, reject a negative result with the same error, and construct dictionaries with `schema_version: 2`, `timestamp_ms`, and their respective `kind` values.
+- Both importers pass those storage-shaped dictionaries to `store.write`, so each importer knows the current record schema and timestamp representation.
+- `Store.write` also knows part of that representation: it accepts version 2 and an integer `timestamp_ms`, copies the record, and appends it. Its docstring states that it stores version-2 records with millisecond timestamps and preserves write order. It does not validate the `kind` field in the shown implementation.
+
+As written, a format change affecting timestamp units, schema version, or record shape would require coordinated edits to both importer functions and likely `Store.write`. The recommendation is to move construction and format-specific validation/conversion behind one `Store` operation, leaving importers to supply the semantic kind and source value. This makes the storage owner responsible for keeping the persisted representation consistent while preserving the importers' legitimate choice of record kind.
+
+The fixture does not establish the complete caller set, whether `Store.write` is used directly elsewhere, any external consumers or compatibility requirements for version-2 records, the desired rounding behavior for fractional or non-finite timestamps, or whether other kinds or timestamp rules are required. It also does not establish that the current contract has been tested. I inspected only the supplied fixture; I did not run tests or edit files. The write-order behavior is visible in the implementation and docstring, but broader ordering guarantees are not established by this fixture.
+
+Loaded skill SHA-256: `b04d77b3c6e6bdc064d47081917d2d2baf02ec007a759fbca849bbb449f0b0e9` (skills/posd-information-hiding/SKILL.md)

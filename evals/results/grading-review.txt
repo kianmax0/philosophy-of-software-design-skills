@@ -1,0 +1,7 @@
+Independent blind-response grading
+
+All 20 final case responses pass their supplied acceptance criteria, with no reject condition triggered. The separate make-unexpected-branch-obvious-attempt-1 fails one acceptance criterion: its proposed keyword-only selector breaks positional boolean callers, but it gives no compatibility or migration path. The final response corrects that gap by preserving positional use and discussing keyword call sites.
+
+Implementation evidence: the independent evals/results/verify_implementations.py run passed all four checks. These compare importer outputs and partial-write effects with the original fixture, preserve direct Store.write behavior, verify required/optional setting semantics and non-None values, and check exception identity and cause propagation. The local implementation check scripts also match the reported command/results. They use deterministic fakes and fixture-scale cases; this evaluation does not establish general efficacy.
+
+Response-specific limitations are recorded in grading.json. Material examples include uninspected external callers and destination/storage contracts, unverified event/audit retry idempotency, and the date-format recommendation's explicit ISO assumption pending confirmation of the required representation.

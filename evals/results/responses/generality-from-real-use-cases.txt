@@ -1,0 +1,41 @@
+Recommendation: generalize the capability modestly. The stated scope has three related needs: export a report as CSV, export it as JSON, and export a filtered subset. A CSV-only interface makes the shared report-export capability coincide with one caller's current format. At the same time, the evidence does not justify a general query language, arbitrary output plugin system, or a large set of format flags.
+
+Evidence and limits
+
+- The task request establishes one caller that uses CSV and two known callers needing JSON and a filtered export. These are the only use-case facts available; the actual call sites, caller code, desired JSON shape, and filter criteria were not supplied or inspected.
+- The supplied `export_options.py` fixture shows a function that gets `report.rows`, optionally prepends `report.columns`, and delegates to `destination.write_rows`. Its arguments `delimiter`, `include_header`, `date_format`, `null_text`, and `quote_all` describe CSV-oriented serialization choices. The fixture does not show caller usage, tests, or destination implementations.
+- I inspected the supplied task JSON and fixture and the one named skill. I did not run code or tests. The verification checks below are proposals, not checks performed.
+
+Shared capability
+
+The common outcome is writing report data to a destination in a requested representation, optionally using a selected subset of the report's rows. CSV and JSON are representations of the same report data. Row selection is a separate concern from serialization: the caller that knows the filtering policy should select the rows, while the export layer should serialize the resulting report data.
+
+Smallest coherent contract
+
+Keep one operation, `export_report(report, destination, *, format="csv", rows=None, csv_options=...)`:
+
+- `format` chooses among the evidenced formats, CSV and JSON. The default preserves the first caller's current easy path.
+- `rows`, when supplied, is the already-selected row sequence to serialize; otherwise the report's full rows are used. This lets a caller pass a filtered subset without embedding a filtering language or callback into the exporter. The caller retains ownership of what “filtered” means.
+- `csv_options` groups the existing CSV-only choices (`delimiter`, header inclusion, date format, null text, and quote behavior) behind an explicit CSV configuration. The implementation should use those settings only for CSV. Do not invent JSON options until the JSON caller's required shape and conventions are known.
+
+This is a proposed contract, not an instruction to edit. If the real filtered caller needs the exporter itself to apply a domain-specific predicate, that would be evidence for a separately specified selection operation; the current request does not identify its predicate, so adding a callback now would make the contract harder to understand without establishing a need. Likewise, whether JSON is an object containing columns and rows, an array of row objects, or another shape remains an open caller requirement rather than a settled contract detail.
+
+Where specialization belongs
+
+The export layer can own the stable operation of serializing report data to the destination. CSV formatting belongs in CSV-specific configuration/serialization logic. JSON shape and encoding belong in JSON-specific serialization logic once the caller's needs are known. The filtered caller owns its filtering policy and supplies the resulting rows. Avoid leaking CSV flags into JSON behavior or making unrelated callers understand a CSV-specific destination protocol.
+
+Affected callers and compatibility
+
+The existing CSV caller can retain a concise call through the default `format="csv"`; its current settings can be passed together as CSV configuration. The JSON caller selects JSON and supplies the report data. The filtered caller selects its rows and passes those rows to the same export operation. These caller descriptions follow only from the task request; actual affected call sites were not available for inspection.
+
+This is a source-level interface change if the existing keyword arguments are replaced by `csv_options`. To preserve compatibility, the implementation could temporarily accept the existing CSV keywords and translate them into the grouped configuration, or update all known callers together if a breaking change is acceptable. The request does not establish a compatibility policy. Preserve the current CSV output behavior, including header handling and formatting, unless the real callers authorize a change.
+
+Verification to perform if implementation is later authorized
+
+1. Confirm actual callers and specify JSON's output shape and the filtered export's row-selection semantics.
+2. Check that the existing CSV call produces the same rows and serialized values for the supplied options, including header on/off, delimiter, date formatting, null representation, and quote behavior.
+3. Check that JSON output follows the agreed shape and preserves the relevant report values.
+4. Check that exporting a selected subset writes only those rows and handles the header consistently for CSV.
+5. Check destination behavior and any error cases established by the actual implementations and callers.
+
+Loaded skill SHA-256: cfdd48e3aada1bc40854b5cdf7b2d40718b4e0e89a13f5ce61270c1423e5cca9

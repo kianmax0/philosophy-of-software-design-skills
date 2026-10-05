@@ -1,43 +1,50 @@
-# Sources and provenance
+# Sources and book calibration
 
-This repository contains original AI-oriented review procedures inspired by ideas in John Ousterhout's *A Philosophy of Software Design*. The book itself was not supplied as source material for this project. This page and the individual skill files link to public author/Stanford materials that support the principle-level framing.
+The primary source for this revision is John Ousterhout, *A Philosophy of Software Design*, **second edition, July 2021 (v2.0)**, ISBN 978-1-7321022-1-7. The supplied PDF's copyright/printing-history page identifies that edition. The collection was checked against its substantive chapters and the concluding principle/red-flag lists on 2026-10-05. Earlier public-course grounding is superseded by this full-book calibration; the [initial smoke report](../evals/results/2026-10-05-smoke.md) describes the earlier revision only.
 
-The [author's book page](https://web.stanford.edu/~ouster/cgi-bin/book.php) identifies the second edition as released in July 2021, notes that Chapter 6 was expanded, and identifies “Decide What Matters” as a new chapter. The linked book extract is limited. Stanford course notes from different years are teaching outlines and may reflect different editions or emphasis. This repository therefore does not claim a definitive complete table of contents or assign chapter numbers to principles unless the cited primary page explicitly does so. Consult a lawfully obtained copy of the relevant edition for full context.
+## Source identity and locators
 
-The procedures, checklists, decision questions, output formats, and examples in these skills are project-authored adaptations. They are not quotations, chapter summaries, or official guidance from Ousterhout or Stanford. This project is independent and is not endorsed by the author or Stanford University.
+- Local input filename: `Ousterhout - 2021 - A philosophy of software design.pdf`.
+- Length: **215 PDF pages**.
+- SHA-256: `c51c08a01b89a82fbc87c6b41f3f22228a21c0e5e769e601742b8f69b76e5d39`.
+- All page ranges below and in skills mean **one-based physical PDF file pages**, not the book's printed page references. Chapter/section identifiers are the portable locators across other copies. This digital layout does not support assuming a single printed-to-PDF offset.
+- [Author's book page](https://web.stanford.edu/~ouster/cgi-bin/book.php) is a public identification link. The supplied full book, rather than the site's limited extract or a course outline, grounds this revision.
 
-## Primary references
+The PDF and extracted full text are not distributed in this repository. Installed skills contain their own concise chapter/section attribution and do not require access to this machine or the book at runtime. Procedures, task routing, evidence requirements, evaluation criteria, and executable fixtures are project-authored adaptations. They are not official rules, quotations, or a claim of author endorsement. The MIT license covers project-authored material, not the book.
 
-- [Ousterhout's book page](https://web.stanford.edu/~ouster/cgi-bin/book.php): edition facts, limited extract, and the stated changes to the second edition.
-- [Stanford CS190, Winter 2018: The Nature of Complexity](https://web.stanford.edu/~ouster/cgi-bin/cs190-winter18/lecture.php?topic=complexity): complexity, dependencies, obscurity, and reader-facing design concerns.
-- [Stanford CS190, Winter 2018: Working Isn't Good Enough](https://web.stanford.edu/~ouster/cgi-bin/cs190-winter18/lecture.php?topic=working): strategic and tactical programming; explicitly labels the reading as Chapter 3.
-- [Stanford CS190, Winter 2018: Modular Design](https://web.stanford.edu/~ouster/cgi-bin/cs190-winter18/lecture.php?topic=modularDesign): interfaces, deep modules, information hiding, general-purpose design, distinct layer abstractions, and pulling complexity down; explicitly labels readings as Chapters 4–7 and 14.
-- [Stanford CS190, Winter 2020: book discussion](https://web.stanford.edu/~ouster/cgi-bin/cs190-winter20/lecture.php?topic=bookReview): a broad list of discussed topics, including error design, comments, naming, what matters, designing twice, complexity placement, and abstraction layers.
-- [Stanford CS190, Winter 2024: wrap-up slides](https://web.stanford.edu/~ouster/cs190-winter24/slides/wrapup.pdf): red flags including shallow modules, inconsistency, unnecessary specialization, information leakage, pass-through methods, obscurity, duplication, and special cases.
-- [Stanford CS190, Winter 2022 course information](https://web.stanford.edu/~ouster/cs190-winter22/info/): identifies the second edition as the course text and describes an iterative code-review and revision approach.
-- [Stanford CS190, Winter 2018: Raft project review](https://web.stanford.edu/~ouster/cgi-bin/cs190-winter18/lecture.php?topic=raftReview2): examples of combining and separating responsibilities and focusing on significant performance costs.
-- [Author-hosted second-edition extract](https://web.stanford.edu/~ouster/cgi-bin/aposd2ndEdExtract.pdf): limited text; includes material from “Decide What Matters.”
+## Operational coverage
 
-## Principle coverage by skill
+This table is a source-to-action map, not a chapter summary. Related chapters share entrypoints when they improve the same engineering decision; there is no requirement for one skill per chapter.
 
-| Skill ID | Principle focus | Primary grounding |
+| Book chapter / PDF pages | Operational home | What the agent does |
 | --- | --- | --- |
-| `posd-design-review` | Route a concrete review to relevant checks; evidence-bounded findings | [CS190 course information](https://web.stanford.edu/~ouster/cs190-winter22/info/), [book page](https://web.stanford.edu/~ouster/cgi-bin/book.php) |
-| `posd-complexity` | Change amplification, cognitive load, unknown dependencies; minimize apparent complexity | [Nature of Complexity](https://web.stanford.edu/~ouster/cgi-bin/cs190-winter18/lecture.php?topic=complexity) |
-| `posd-strategic-design` | Strategic vs tactical programming; improve design within a bounded change | [Working Isn't Good Enough](https://web.stanford.edu/~ouster/cgi-bin/cs190-winter18/lecture.php?topic=working) |
-| `posd-decide-what-matters` | Focus on important caller needs and hide details that need not matter to callers | [Book page](https://web.stanford.edu/~ouster/cgi-bin/book.php), [book extract](https://web.stanford.edu/~ouster/cgi-bin/aposd2ndEdExtract.pdf) |
-| `posd-deep-modules` | Rich functionality behind a simple interface | [Modular Design](https://web.stanford.edu/~ouster/cgi-bin/cs190-winter18/lecture.php?topic=modularDesign) |
-| `posd-information-hiding` | Encapsulate design decisions and avoid information leakage | [Modular Design](https://web.stanford.edu/~ouster/cgi-bin/cs190-winter18/lecture.php?topic=modularDesign) |
-| `posd-general-purpose` | Choose generality based on real reuse and caller needs | [Book page](https://web.stanford.edu/~ouster/cgi-bin/book.php), [Modular Design](https://web.stanford.edu/~ouster/cgi-bin/cs190-winter18/lecture.php?topic=modularDesign) |
-| `posd-abstraction-layers` | Each layer should provide a distinct abstraction; pass-through methods are a warning sign | [Modular Design](https://web.stanford.edu/~ouster/cgi-bin/cs190-winter18/lecture.php?topic=modularDesign), [wrap-up slides](https://web.stanford.edu/~ouster/cs190-winter24/slides/wrapup.pdf) |
-| `posd-pull-complexity-down` | Put difficult mechanism behind an interface that reduces user burden | [Modular Design](https://web.stanford.edu/~ouster/cgi-bin/cs190-winter18/lecture.php?topic=modularDesign) |
-| `posd-module-boundaries` | Compare combining and separating around shared knowledge and dependencies | [Raft project review](https://web.stanford.edu/~ouster/cgi-bin/cs190-winter18/lecture.php?topic=raftReview2), [book discussion](https://web.stanford.edu/~ouster/cgi-bin/cs190-winter20/lecture.php?topic=bookReview) |
-| `posd-error-design` | Reduce exceptional cases and clarify where failures are handled | [Book discussion](https://web.stanford.edu/~ouster/cgi-bin/cs190-winter20/lecture.php?topic=bookReview) |
-| `posd-design-twice` | Compare multiple plausible designs before committing | [Book discussion](https://web.stanford.edu/~ouster/cgi-bin/cs190-winter20/lecture.php?topic=bookReview), [Modular Design](https://web.stanford.edu/~ouster/cgi-bin/cs190-winter18/lecture.php?topic=modularDesign) |
-| `posd-comments` | Use comments to communicate knowledge that code cannot make clear | [Book discussion](https://web.stanford.edu/~ouster/cgi-bin/cs190-winter20/lecture.php?topic=bookReview), [wrap-up slides](https://web.stanford.edu/~ouster/cs190-winter24/slides/wrapup.pdf) |
-| `posd-naming` | Names make important meaning easier to recognize | [Book discussion](https://web.stanford.edu/~ouster/cgi-bin/cs190-winter20/lecture.php?topic=bookReview), [wrap-up slides](https://web.stanford.edu/~ouster/cs190-winter24/slides/wrapup.pdf) |
-| `posd-consistency` | Reuse conventions to reduce surprise while preserving justified semantic differences | [Wrap-up slides](https://web.stanford.edu/~ouster/cs190-winter24/slides/wrapup.pdf) |
-| `posd-obvious-code` | Make code structure and behavior understandable to readers | [Nature of Complexity](https://web.stanford.edu/~ouster/cgi-bin/cs190-winter18/lecture.php?topic=complexity), [wrap-up slides](https://web.stanford.edu/~ouster/cs190-winter24/slides/wrapup.pdf) |
-| `posd-performance` | Focus on significant performance costs and assess design tradeoffs | [Raft project review](https://web.stanford.edu/~ouster/cgi-bin/cs190-winter18/lecture.php?topic=raftReview2) |
+| 1 Introduction / 14–18 | `posd-design-review`, all focused skills | Use concrete code/caller tasks; investigate red flags and compare alternatives with moderation |
+| 2 The Nature of Complexity / 19–26 | `posd-complexity` | Trace developer burden to dependencies/obscurity; prioritize common tasks without inventing a score |
+| 3 Working Code Isn’t Enough / 27–33 | `posd-strategic-design` | Compare the clean resulting abstraction with a patch and make a bounded investment now |
+| 4 Modules Should Be Deep / 34–43 | `posd-deep-modules` | Examine formal and informal caller contracts and simplify common use, not merely count methods |
+| 5 Information Hiding (and Leakage) / 44–54 | `posd-information-hiding` | Give a representation/policy one owner; test temporal decomposition and necessary visibility |
+| 6 General-Purpose Modules are Deeper / 55–66 | `posd-general-purpose` | Design a small somewhat general interface, placing specialization above or below the reusable core |
+| 7 Different Layer, Different Abstraction / 67–77 | `posd-abstraction-layers` | Test layer value and pass-through variables; weigh contexts against hidden coupling |
+| 8 Pull Complexity Downwards / 78–81 | `posd-pull-complexity-down` | Move repeated difficulty/default choices to a knowledgeable owner while preserving meaningful controls |
+| 9 Better Together Or Better Apart? / 82–95 | `posd-module-boundaries` | Join shared knowledge; separate independent or specialized work; keep conceptual methods complete |
+| 10 Define Errors Out Of Existence / 96–111 | `posd-error-design` | Distinguish elimination, masking, aggregation, and termination; preserve failures that matter |
+| 11 Design it Twice / 112–115 | `posd-design-twice` | Compare substantively different interfaces or implementations using the same caller scenarios |
+| 12 Why Write Comments? The Four Excuses / 116–122 | `posd-comments` | Preserve abstraction knowledge the code cannot express; avoid self-documenting-code excuses |
+| 13 Comments Should Describe Things that Aren’t Obvious from the Code / 123–143 | `posd-comments` | Separate precision, intuition, interface contracts, implementation rationale, and shared design notes |
+| 14 Choosing Names / 144–153 | `posd-naming` | Test the reader's mental picture at use sites and treat hard naming as design evidence |
+| 15 Write The Comments First / 154–158 | `posd-comments`, `posd-design-twice`, `posd-design-review` | Draft the contract before implementation and use difficulty explaining it as design feedback |
+| 16 Modifying Existing Code / 159–165 | `posd-strategic-design`, `posd-comments` | Improve the affected abstraction; retain rationale near its owner and check comments against the diff |
+| 17 Consistency / 166–170 | `posd-consistency` | Transfer learning across genuinely similar operations, retaining visible semantic exceptions |
+| 18 Code Should be Obvious / 171–177 | `posd-obvious-code` | Compare a reader's first inference with actual behavior; expose needed information at the reading site |
+| 19 Software Trends / 178–185 | `posd-design-review`, `posd-strategic-design`, focused boundary skills | Judge inheritance, patterns, getters/setters, and development processes by complexity; design abstractions coherently |
+| 20 Designing for Performance / 186–197 | `posd-performance` | Measure before/after, remove fundamental costs, and design a simple common critical path with a clear slow path |
+| 21 Decide What Matters / 198–201 | `posd-decide-what-matters` | Find leverage, minimize where important facts must be understood, and make essential distinctions prominent |
+| 22 Conclusion / 202–203; end lists / 210–212 | Whole collection | Check the common objective and red flags across workflows without making every red flag a mandatory finding |
 
-This mapping says which primary materials support each skill's principle-level inspiration. It does not imply that every checklist item or operational rule appears in those sources.
+## Fidelity boundaries
+
+**Book principles:** complexity concerns understanding/modification; interfaces include informal obligations; hiding knowledge and allocating responsibility can matter more than shortening implementations; principles require judgment rather than universal bans. Chapter 19 distinguishes useful unit tests and bug reproduction from letting feature-by-feature TDD replace abstraction design. Its criticism is preserved as a design criterion; these skills do not dictate a development methodology.
+
+**Project adaptations:** review/design/implementation modes, path-and-caller evidence, scope limits, migration accounting, and behavioral grading make the principles usable by coding agents. The book does not prescribe these output schemas, case IDs, or tooling. The suggested investment percentages and illustrative payoff estimates in Chapter 3 are not treated as empirical guarantees or per-task quotas. No method length, class count, reuse count, or depth ratio is used as a quality metric.
+
+**Verification scope:** source calibration is distinct from packaging checks, behavioral case results, installed-client discovery, and performance measurement. See [behavioral evaluation](../evals/README.md) for the actual run protocol and results. A checked source map or valid YAML alone does not establish that an agent will make good design decisions in production.

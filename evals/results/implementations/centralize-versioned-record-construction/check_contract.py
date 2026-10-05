@@ -1,0 +1,63 @@
+"""Deterministic contract checks for the version-2 import record boundary."""
+
+from importers import Store, import_events, import_sessions, make_storage_record
+
+
+def check(condition, message):
+    if not condition:
+        raise AssertionError(message)
+
+
+# Record shape, source kind, conversion, and a near-zero negative that truncates
+# toward zero before the nonnegative check are all part of the contract.
+check(
+    make_storage_record(1.2349, "session")
+    == {"schema_version": 2, "timestamp_ms": 1234, "kind": "session"},
+    "record shape or int(seconds * 1000) conversion changed",
+)
+check(
+    make_storage_record(-0.0001, "event")["timestamp_ms"] == 0,
+    "submillisecond negative must truncate to zero before checking",
+)
+
+# A value that converts to a negative integer must be rejected.
+try:
+    make_storage_record(-0.0011, "event")
+except ValueError as error:
+    check(str(error) == "timestamp must be nonnegative", "unexpected timestamp error")
+else:
+    raise AssertionError("negative converted timestamp was accepted")
+
+# Both importers preserve kind, row order, and the stored record shape.
+store = Store()
+import_sessions(
+    [{"timestamp_seconds": 2.0}, {"timestamp_seconds": 0.001}], store
+)
+import_events(
+    [{"timestamp_seconds": 3.0}, {"timestamp_seconds": 0.0}], store
+)
+check(
+    store.records
+    == [
+        {"schema_version": 2, "timestamp_ms": 2000, "kind": "session"},
+        {"schema_version": 2, "timestamp_ms": 1, "kind": "session"},
+        {"schema_version": 2, "timestamp_ms": 3000, "kind": "event"},
+        {"schema_version": 2, "timestamp_ms": 0, "kind": "event"},
+    ],
+    "import record content or write order changed",
+)
+
+# The storage boundary rejects invalid schema versions and timestamp types.
+# Kind validation is not part of the preserved legacy contract.
+for invalid in (
+    {"schema_version": 1, "timestamp_ms": 0, "kind": "session"},
+    {"schema_version": 2, "timestamp_ms": "1", "kind": "event"},
+):
+    try:
+        Store().write(invalid)
+    except ValueError as error:
+        check(str(error) == "invalid storage record", "unexpected storage error")
+    else:
+        raise AssertionError(f"invalid record was accepted: {invalid!r}")
+
+print("contract checks passed")

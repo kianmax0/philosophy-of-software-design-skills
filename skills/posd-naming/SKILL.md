@@ -1,47 +1,37 @@
 ---
 name: posd-naming
-description: Use when a name obscures a symbol's role, callers infer inconsistent meanings, or a rename is proposed across an API or codebase
+description: Choose or review names that give readers a precise, consistent mental picture of a symbol and its distinctions.
 license: MIT
 ---
 
-# Naming
+# Choose names that create the right image
 
-Use this skill to evaluate whether a name helps readers form the right mental model at the point of use. Judge the name in context, including nearby types, call sites, and domain vocabulary. Do not optimize for cleverness or length alone.
+A name is a compact abstraction: it should help a reader guess what an entity is and, just as importantly, what it is not. Optimize for a correct first reading at the point of use, not for the writer's typing convenience or an abstract preference for short or long names.
 
-The design principle is associated with John Ousterhout's *A Philosophy of Software Design*. The procedure and examples here are original adaptations. See the [Stanford CS190 book discussion](https://web.stanford.edu/~ouster/cgi-bin/cs190-winter20/lecture.php?topic=bookReview) for the principle-level source.
+Source: John Ousterhout, *A Philosophy of Software Design*, 2nd ed. (2021), Chapter 14, §§14.1–14.7 (PDF file-page numbers, pp. 144–153). The checks here adapt the chapter into a coding-agent workflow.
 
 ## Procedure
 
-1. Locate the declaration and representative usages. Record path:line evidence for the symbol, its contract, and call sites that show how readers interpret it.
-2. State the symbol's role, owned responsibility, and important distinction from nearby concepts in a plain sentence. Check whether the current name implies a broader, narrower, or different role.
-3. Inspect domain terms, established local conventions, overloads, serialized forms, reflection, generated bindings, and external callers. Search usages before recommending a rename; visible text may be part of a compatibility contract.
-4. Offer a candidate only when it better communicates meaning at real call sites. Explain the ambiguity it removes and any tradeoff in length or consistency. Prefer changing the contract or ownership when the name cannot be made accurate without disguising a deeper design problem.
-5. For reviews, report recommendations only. If a rename is explicitly requested and within scope, update all verified usages, preserve behavior and serialized/public compatibility, and check references, builds, and relevant tests.
-
-## Output
-
-For each recommendation, report:
-
-- **Evidence:** declaration and representative path:line usages.
-- **Current reading:** plausible interpretation and why it misleads.
-- **Candidate:** proposed name and its meaning at a call site.
-- **Impact:** compatibility, search, generated code, or migration concerns.
-- **Confidence:** verified coverage or unresolved usage risk.
-
-Do not claim a repository-wide rename is safe from a partial text search. State the boundaries of the usage search and identify dynamic or external references when relevant.
+1. Locate the declaration and usages, including representative callers, tests, serialized or reflected forms, generated bindings, and public interfaces. Record the search boundary; text search may miss dynamic and external references.
+2. State what the symbol represents and the important ways it differs from nearby concepts. Imagine a reader seeing the name without its declaration: what would they guess? Compare that guess with actual behavior.
+3. Check **precision**. Replace broad terms such as `count`, `status`, `data`, or `block` when they conceal which entity, state, unit, or domain is meant. Boolean names should read as predicates whose true/false meanings are apparent. Distinguish concepts that can be confused with one another; use distinct types when they can prevent an invalid interchange.
+4. Check **consistency**. Find the established term for this same purpose and use it consistently. Never use that common name for a different meaning. If there are two values of one kind, add a useful distinction such as source/destination. Ensure the repeated name has a narrow enough meaning that readers can safely transfer their knowledge.
+5. Remove words that add no information, such as a redundant `Object`, type encoding readily visible from the declaration, or a class name repeated inside its own context. Keep enough words to disambiguate the role.
+6. Match name length to context. A short local loop variable can work when its complete scope is visible. As declaration-to-use distance or semantic ambiguity grows, make the name more descriptive. Local conventions and audience familiarity matter; do not impose a universal length rule.
+7. If no concise name fits, treat that as design evidence. Check whether one variable combines distinct concepts, a responsibility is unclear, or the abstraction needs a different factoring. Improve the design when evidence supports it instead of hiding the problem in a long label.
+8. **Complete the requested mode.** For an implementation request, rename the symbol and verified references, update affected callers/contracts, and preserve API, storage, reflection, and generated-code compatibility. Run relevant builds/tests and report edits, verification, and usages that could not be inspected. For review-only tasks, recommend without editing.
 
 ## Example
 
-Before: `cache.refresh(key)` sounds like it updates stored data, but the implementation only invalidates an entry.
+In a filtered table, `rowIndex` may mean a visible position while `recordIndex` means the underlying dataset position. Passing one where the other is expected can update the wrong record. Use distinct names, or distinct types when the boundary merits enforcement, and preserve the distinction consistently in callers.
 
-After candidate: `cache.invalidate(key)` accurately describes the visible effect. Before renaming, inspect all usages and public API guarantees; if callers rely on `refresh` to fetch a replacement, changing the name alone would conceal a behavior mismatch.
+## Retain the name when
 
-## Leave the Name Alone When
+- It is precise in its local context and the proposed alternative changes only style.
+- It is established domain language and readers already infer the right meaning.
+- A short name's full scope is visible and unambiguous.
+- A migration could alter a public or persisted contract, or usage coverage is incomplete; report the risk rather than imply the rename is safe.
 
-- The current term is established domain language and users understand it.
-- The alternative differs only in style or personal preference.
-- A rename affects a public, serialized, reflected, or generated identifier without an authorized migration.
-- Usages are incomplete or dynamic, so semantic impact is unclear.
-- The true problem lies in unclear responsibility or behavior rather than wording.
+## Output
 
-Names should communicate distinctions that matter. A longer precise name may reduce repeated explanation; a short name may be clear when its local context is strong.
+For a supported issue, provide declaration and representative-use locations, the likely mistaken reading, a candidate name and the distinction it makes visible, and migration/search limits. If the name is adequate, say what evidence makes its meaning clear. Separate naming clarity from behavior changes.

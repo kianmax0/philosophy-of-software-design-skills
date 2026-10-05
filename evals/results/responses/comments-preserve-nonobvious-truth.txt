@@ -1,0 +1,19 @@
+## Review of `comments_and_units.py`
+
+The comment above `expire_at` is misleading and should be corrected. The function accepts `deadline_ms` and `now_ms` and compares them directly with `now_ms >= deadline_ms`; it does not convert seconds to milliseconds. For maintainers, preserve the actual contract: both values are milliseconds, and expiration is inclusive at the deadline (`now_ms == deadline_ms` returns `True`). A precise replacement would be:
+
+```python
+# Both timestamps are milliseconds; the deadline is reached when now_ms >= deadline_ms.
+```
+
+Evidence: the parameter names identify milliseconds and the implementation performs only the comparison. No conversion appears in the function. The fixture does not establish where either timestamp comes from, so do not claim that either input originated in seconds.
+
+The `retry_delay_ms` docstring is consistent with its implementation and should retain the millisecond unit. Its result is `min(100 * 2**attempt, 5_000)`, so the implementation expresses a delay beginning at 100 and capped at 5,000 in the documented unit (milliseconds). If maintainers need the exact cap and growth rule without reading the body, the docstring could state “Return `min(100 * 2**attempt, 5_000)` milliseconds.” The existing docstring does not mislead, however, so no correction is required under the request to correct only misleading statements.
+
+The `retry_delay_seconds` docstring also labels its result in a different unit, seconds, and its formula is `min(2**attempt, 30)`. Keep this distinction explicit: this function's result is in seconds, whereas `retry_delay_ms` returns milliseconds. The fixture does not show a caller or status-message formatter, so the stated human-readable-status purpose cannot be independently confirmed from this implementation. If the docstring is meant to make a verified behavioral claim, confirm that purpose with the owner or a caller; the formula alone establishes only the returned numeric expression, not how the value is displayed or consumed. Do not combine the two functions under a generic “delay” description that drops their units.
+
+## Verification performed
+
+I inspected the supplied fixture's declarations, comments, docstrings, and function bodies. I did not edit anything, run tests, or inspect callers; this was a review-only request and the fixture contains no callers or tests.
+
+Final evidence note: SHA-256 of the loaded `posd-comments` skill file: `cb1490b3da74205dfb97cc0e1b6f42e6758b145ebd7604dde4db2428031d5a0e`.

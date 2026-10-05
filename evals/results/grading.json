@@ -1,0 +1,766 @@
+[
+  {
+    "id": "shared-storage-knowledge",
+    "acceptance": [
+      {
+        "criterion": "Identifies schema version, timestamp unit/conversion, and validation knowledge shared by importers.",
+        "met": true,
+        "evidence": "Names schema version 2, seconds-to-ms int conversion, nonnegative check, and Store shape validation as repeated/split storage knowledge."
+      },
+      {
+        "criterion": "Explains coordinated edits for format change with code locations.",
+        "met": true,
+        "evidence": "Traces both importers and Store.write/docstring; states format changes require coordinated importer and Store changes."
+      },
+      {
+        "criterion": "Coherent owner for storage representation; domain kind and source interpretation explicit.",
+        "met": true,
+        "evidence": "Proposes Store.write_import(timestamp_seconds, kind), with kind selected by each importer."
+      },
+      {
+        "criterion": "Preserves timestamp conversion, accepted-input behavior, and write ordering or accounts for compatibility.",
+        "met": true,
+        "evidence": "Explicitly preserves truncation, negative rejection, ordering, and flags out-of-fixture Store.write callers and edge semantics."
+      }
+    ],
+    "reject": [
+      {
+        "criterion": "Syntax deduplication alone without representation hiding.",
+        "triggered": false,
+        "evidence": "Proposed API takes source timestamp and kind and constructs canonical record in Store."
+      },
+      {
+        "criterion": "Plugin framework/unrelated rewrite.",
+        "triggered": false,
+        "evidence": "One focused Store operation proposed."
+      },
+      {
+        "criterion": "Unsupported runtime defect or edit despite review-only request.",
+        "triggered": false,
+        "evidence": "No runtime defect claimed; no files edited."
+      }
+    ],
+    "outcome": "pass",
+    "limitations": "No external Store.write callers inspected; suggested method assumes source timestamps in seconds, with caveat for a different third-importer unit."
+  },
+  {
+    "id": "justified-authorization-boundary",
+    "acceptance": [
+      {
+        "criterion": "Recognizes authorization before storage access as meaningful invariant.",
+        "met": true,
+        "evidence": "Identifies require_read before store.read as the security behavior in DocumentGateway."
+      },
+      {
+        "criterion": "Retains boundary unless evidenced replacement preserves enforcement.",
+        "met": true,
+        "evidence": "Explicitly recommends retaining gateway; warns direct store access removes visible enforcement."
+      },
+      {
+        "criterion": "Explains caller-distributed security knowledge risk.",
+        "met": true,
+        "evidence": "Says moving checks into each helper/caller risks inconsistent enforcement across access paths."
+      },
+      {
+        "criterion": "Uses supplied code and marks uninspected paths unknown.",
+        "met": true,
+        "evidence": "Cites gateway/read and helpers; states permissions implementation and alternate paths are unknown."
+      }
+    ],
+    "reject": [
+      {
+        "criterion": "Deletes layer solely for brevity/forwarding.",
+        "triggered": false,
+        "evidence": "Retains the gateway."
+      },
+      {
+        "criterion": "Moves authorization into every caller without enforcement.",
+        "triggered": false,
+        "evidence": "Rejects caller-owned checks."
+      },
+      {
+        "criterion": "Claims full system secure.",
+        "triggered": false,
+        "evidence": "Limits conclusion to fixture and lists unknown paths."
+      }
+    ],
+    "outcome": "pass",
+    "limitations": "No implementation of permission or storage paths, external callers, or system-wide read paths inspected."
+  },
+  {
+    "id": "absence-is-not-failure",
+    "acceptance": [
+      {
+        "criterion": "Finds broad Exception masks operational failures.",
+        "met": true,
+        "evidence": "Explains get_optional catches Exception and maps permission/transport/other failures to None/default."
+      },
+      {
+        "criterion": "Narrows absence to documented KeyError and propagates others.",
+        "met": true,
+        "evidence": "Provides a concrete except KeyError implementation and propagation rationale."
+      },
+      {
+        "criterion": "Preserves required behavior and non-None stored-value contract.",
+        "met": true,
+        "evidence": "Keeps get_required unchanged; notes stored values never None and load_theme default on absence."
+      },
+      {
+        "criterion": "Suggests meaningful checks without claiming they ran.",
+        "met": true,
+        "evidence": "Proposes present/missing/operational exception and load_theme checks; explicitly says untested."
+      }
+    ],
+    "reject": [
+      {
+        "criterion": "Suppresses all failures.",
+        "triggered": false,
+        "evidence": "Only KeyError is caught."
+      },
+      {
+        "criterion": "Changes required settings to defaults.",
+        "triggered": false,
+        "evidence": "Required accessor unchanged."
+      },
+      {
+        "criterion": "Claims absent runtime results or edits.",
+        "triggered": false,
+        "evidence": "States no checks run and no files edited."
+      }
+    ],
+    "outcome": "pass",
+    "limitations": "The review assumes the backend reserves KeyError for absence and explicitly calls out that dependency."
+  },
+  {
+    "id": "trace-change-cost",
+    "acceptance": [
+      {
+        "criterion": "Names planned third importer and timestamp-unit change and traces both importers plus Store.",
+        "met": true,
+        "evidence": "Follows row timestamp through conversion, validation, record creation, Store.write, docs."
+      },
+      {
+        "criterion": "Connects coordinated edits to duplicated policy knowledge.",
+        "met": true,
+        "evidence": "Explains conversion, schema/field shape, and partial Store validation as change amplification."
+      },
+      {
+        "criterion": "Separates observed burden from speculation.",
+        "met": true,
+        "evidence": "Labels third importer and unit change as scenario, distinguishes out-of-fixture callers and different units."
+      }
+    ],
+    "reject": [
+      {
+        "criterion": "Counts syntax without change dependency.",
+        "triggered": false,
+        "evidence": "Explains which edits a format change requires and why."
+      },
+      {
+        "criterion": "Calls design complex without identifying knowledge/edits.",
+        "triggered": false,
+        "evidence": "Lists specific caller-visible storage knowledge and edit sites."
+      }
+    ],
+    "outcome": "pass",
+    "limitations": "Only supplied fixture inspected; recommendation assumes common timestamp source unit if Store accepts seconds."
+  },
+  {
+    "id": "combine-shared-record-policy",
+    "acceptance": [
+      {
+        "criterion": "Identifies shared schema, conversion, validation, write-order invariant.",
+        "met": true,
+        "evidence": "Names duplicate schema-2 construction, int conversion, negative rule, and per-row ordered append."
+      },
+      {
+        "criterion": "Keeps source-specific kind interpretation appropriately owned.",
+        "met": true,
+        "evidence": "Passes kind from each importer to shared constructor; source meaning remains visible."
+      },
+      {
+        "criterion": "Compares caller and maintainer costs.",
+        "met": true,
+        "evidence": "Describes added shared constructor/call overhead versus avoiding paired edits; distinguishes Store persistence API."
+      }
+    ],
+    "reject": [
+      {
+        "criterion": "Combines modules only because adjacent/similar.",
+        "triggered": false,
+        "evidence": "Basis is shared change-sensitive storage contract."
+      },
+      {
+        "criterion": "Splits every helper without coherent contract.",
+        "triggered": false,
+        "evidence": "Proposes one constructor with explicit policy."
+      }
+    ],
+    "outcome": "pass",
+    "limitations": "Some validation overlaps between constructor and Store remains by design; other Store.write callers uninspected."
+  },
+  {
+    "id": "consistency-with-meaningful-differences",
+    "acceptance": [
+      {
+        "criterion": "Recognizes matching validation and timeout retry in event/audit.",
+        "met": true,
+        "evidence": "Identifies validate-before-write and matching three-attempt TimeoutError loops."
+      },
+      {
+        "criterion": "Preserves payment no-retry due to non-idempotent sink.",
+        "met": true,
+        "evidence": "Keeps direct one-shot write and cites docstring."
+      },
+      {
+        "criterion": "Bases alignment on observed contracts.",
+        "met": true,
+        "evidence": "Narrow shared retry helper based on identical behavior; preserves domain validations."
+      }
+    ],
+    "reject": [
+      {
+        "criterion": "Retries payments without accounting for duplicate effects.",
+        "triggered": false,
+        "evidence": "Explicitly excludes payments."
+      },
+      {
+        "criterion": "Forces all validation rules/messages identical.",
+        "triggered": false,
+        "evidence": "Keeps domain-specific validation local."
+      }
+    ],
+    "outcome": "pass",
+    "limitations": "Does not establish event/audit sink idempotency; explicitly requires confirmation before moving those retries."
+  },
+  {
+    "id": "comments-preserve-nonobvious-truth",
+    "acceptance": [
+      {
+        "criterion": "Finds stale seconds-to-ms comment when inputs already milliseconds.",
+        "met": true,
+        "evidence": "Notes direct millisecond comparison and recommends accurate unit/inclusive-deadline comment."
+      },
+      {
+        "criterion": "Retains useful units for both retry delays.",
+        "met": true,
+        "evidence": "Keeps milliseconds and seconds distinction and documents actual formula/cap."
+      },
+      {
+        "criterion": "Avoids line-by-line narration.",
+        "met": true,
+        "evidence": "Proposes one contract-focused replacement comment and retains useful docstrings."
+      }
+    ],
+    "reject": [
+      {
+        "criterion": "Trusts comment over code.",
+        "triggered": false,
+        "evidence": "Follows executable comparison."
+      },
+      {
+        "criterion": "Removes all unit docs.",
+        "triggered": false,
+        "evidence": "Preserves both delay units."
+      }
+    ],
+    "outcome": "pass",
+    "limitations": "Human-readable status purpose cannot be established from fixture and is marked unverified."
+  },
+  {
+    "id": "compare-delivery-contracts",
+    "acceptance": [
+      {
+        "criterion": "Inline exposes transport failure; enqueue acceptance is not delivery.",
+        "met": true,
+        "evidence": "Explains sync send failure vs queued acceptance and missing later-status channel."
+      },
+      {
+        "criterion": "Keeps current behavior/constraints constant in comparison.",
+        "met": true,
+        "evidence": "Compares both for same immediate delivery-failure requirement and notes unknown latency/timeout."
+      },
+      {
+        "criterion": "Names tradeoffs and changed requirement that could justify queue.",
+        "met": true,
+        "evidence": "Queue justified if prompt acceptance plus eventual-status checking replaces immediate delivery reporting; proposes ID/status path."
+      }
+    ],
+    "reject": [
+      {
+        "criterion": "Superficial renaming as second design.",
+        "triggered": false,
+        "evidence": "Compares inline and queue control flow and contracts."
+      },
+      {
+        "criterion": "Recommends queue while dropping immediate failure reporting.",
+        "triggered": false,
+        "evidence": "Chooses inline for current requirement."
+      }
+    ],
+    "outcome": "pass",
+    "limitations": "Queue durability/status semantics are explicitly proposed requirements, not fixture behavior; exact exception behavior unknown."
+  },
+  {
+    "id": "reduce-export-interface-depth-cost",
+    "acceptance": [
+      {
+        "criterion": "Relates options to controlled behavior and amount hidden.",
+        "met": true,
+        "evidence": "Traces header assembly vs direct rows and four formatting kwargs delegated to destination."
+      },
+      {
+        "criterion": "Identifies essential choices vs mechanics.",
+        "met": true,
+        "evidence": "Separates include_header from grouped serialization policy; acknowledges caller uses unknown."
+      },
+      {
+        "criterion": "Bounded direction without equating fewer args with depth.",
+        "met": true,
+        "evidence": "Retains coherent export operation and groups format settings while admitting this mostly names/reuses choices."
+      }
+    ],
+    "reject": [
+      {
+        "criterion": "Equates length/options with depth.",
+        "triggered": false,
+        "evidence": "Explicitly says operation is already coherent and fewer choices alone do not prove depth."
+      },
+      {
+        "criterion": "Removes output options without caller needs.",
+        "triggered": false,
+        "evidence": "Preserves all settings in DelimitedFormat."
+      }
+    ],
+    "outcome": "pass",
+    "limitations": "Proposed DelimitedFormat may add abstraction without demonstrated reuse; response acknowledges no caller evidence and does not claim reduced choice cost."
+  },
+  {
+    "id": "review-entrypoint-scope",
+    "acceptance": [
+      {
+        "criterion": "Selects boundary-relevant checks.",
+        "met": true,
+        "evidence": "Focuses on gateway authorization invariant and whether forwarding helpers have distinct public semantics."
+      },
+      {
+        "criterion": "Cites authorization-before-read and separates fixture facts/unknowns.",
+        "met": true,
+        "evidence": "Names require_read before store.read, while marking implementation and alternate access paths unknown."
+      },
+      {
+        "criterion": "Limits findings to actionable issue or justified retain.",
+        "met": true,
+        "evidence": "Justifies retaining gateway and limits possible simplification to helpers pending caller/API evidence."
+      }
+    ],
+    "reject": [
+      {
+        "criterion": "Unrelated naming/performance/formatting.",
+        "triggered": false,
+        "evidence": "No such findings."
+      },
+      {
+        "criterion": "Full-system security conclusion.",
+        "triggered": false,
+        "evidence": "Explicitly says isolated fixture cannot establish full-system assurance."
+      }
+    ],
+    "outcome": "pass",
+    "limitations": "Fixture only; its conditional statement about rejection assumes require_read raises, which response marks unknown."
+  },
+  {
+    "id": "generality-from-real-use-cases",
+    "acceptance": [
+      {
+        "criterion": "Uses two concrete additional use cases as evidence.",
+        "met": true,
+        "evidence": "Uses JSON and filtered export stated by task alongside CSV."
+      },
+      {
+        "criterion": "Keeps coherent export capability and separates requirements from mechanics.",
+        "met": true,
+        "evidence": "One export operation with format selection; caller owns row filtering, serializer owns encoding."
+      },
+      {
+        "criterion": "Rejects imagined options/framework.",
+        "met": true,
+        "evidence": "Limits formats to CSV/JSON; leaves JSON shape open; rejects query language/plugins."
+      }
+    ],
+    "reject": [
+      {
+        "criterion": "Maximum generality/plugins from one method.",
+        "triggered": false,
+        "evidence": "Explicitly rejects plugin framework and query language."
+      },
+      {
+        "criterion": "Ignores known callers.",
+        "triggered": false,
+        "evidence": "Accounts for JSON and filtered use cases."
+      }
+    ],
+    "outcome": "pass",
+    "limitations": "Filtered-row API and CSV options grouping are proposals; actual call sites, filter policy, JSON shape, and compatibility are unknown."
+  },
+  {
+    "id": "decision-owner-for-storage-format",
+    "acceptance": [
+      {
+        "criterion": "Explains localized format decisions and each importer's dependency.",
+        "met": true,
+        "evidence": "Names duplicated conversion, schema fields, kind, Store's partial validation; proposes Store operation."
+      },
+      {
+        "criterion": "Keeps source identity/interpretation explicit.",
+        "met": true,
+        "evidence": "Leaves session/event kind selection in importers and passes kind to Store."
+      },
+      {
+        "criterion": "Separates fixture-visible facts from unknown consumers.",
+        "met": true,
+        "evidence": "Lists unknown external callers, direct Store.write usage, compatibility, edge rules."
+      }
+    ],
+    "reject": [
+      {
+        "criterion": "Private fields/helper extraction alone presented as hiding.",
+        "triggered": false,
+        "evidence": "Operation takes semantic timestamp/kind and owns construction."
+      },
+      {
+        "criterion": "Opaque record hides domain meaning.",
+        "triggered": false,
+        "evidence": "Kind remains explicit as session/event."
+      }
+    ],
+    "outcome": "pass",
+    "limitations": "The recommended method presumes one timestamp unit; this is stated as an open question for other importers."
+  },
+  {
+    "id": "choose-caller-visible-export-decisions",
+    "acceptance": [
+      {
+        "criterion": "Ties each retained/hidden choice to caller need or invariant.",
+        "met": true,
+        "evidence": "Retains include_header due to explicit request; hides other options absent evidence; ISO default is qualified."
+      },
+      {
+        "criterion": "Defaults implementation details without caller control.",
+        "met": true,
+        "evidence": "Proposes comma/ISO/empty null/no forced quote as module policy."
+      },
+      {
+        "criterion": "Preserves header and date behavior.",
+        "met": true,
+        "evidence": "Keeps header toggle and ISO under explicit assumption; says substitute governing required representation if different."
+      }
+    ],
+    "reject": [
+      {
+        "criterion": "Removes all customization without checking.",
+        "triggered": false,
+        "evidence": "Keeps requested header control."
+      },
+      {
+        "criterion": "Adds future configuration.",
+        "triggered": false,
+        "evidence": "Removes unrequested options and adds none."
+      }
+    ],
+    "outcome": "pass",
+    "limitations": "The request does not state the exact required date representation; recommendation assumes fixture default ISO and asks to verify governing contract before implementation. Compatibility impact on keyword callers is noted."
+  },
+  {
+    "id": "name-by-role-and-contract",
+    "acceptance": [
+      {
+        "criterion": "Finds process/flag/load unclear.",
+        "met": true,
+        "evidence": "Explains ambiguous function/boolean and generic load name."
+      },
+      {
+        "criterion": "Uses behavior and load docstring as evidence.",
+        "met": true,
+        "evidence": "Describes active filtering, email-vs-ID branches, UTF-8 JSON decoding, and avoids overclaiming records."
+      },
+      {
+        "criterion": "Notes rename compatibility depends on external/serialized use.",
+        "met": true,
+        "evidence": "Calls out callers/imports/reflection/generated APIs and migration wrappers/deprecation."
+      }
+    ],
+    "reject": [
+      {
+        "criterion": "Repository-wide rename without usages/compatibility.",
+        "triggered": false,
+        "evidence": "Candidate only and requests usage checks."
+      },
+      {
+        "criterion": "Cleverness/brevity alone.",
+        "triggered": false,
+        "evidence": "Names reflect behavior and return data."
+      }
+    ],
+    "outcome": "pass",
+    "limitations": "No actual call sites or API surface inspected; `select_active_ids_or_emails` is verbose but accurately names both return modes."
+  },
+  {
+    "id": "make-unexpected-branch-obvious",
+    "acceptance": [
+      {
+        "criterion": "Identifies flag-dependent return shape as obscurity.",
+        "met": true,
+        "evidence": "Names active filter and branch returning emails vs IDs."
+      },
+      {
+        "criterion": "Proposes explicit operation/result contract and accounts for existing callers.",
+        "met": true,
+        "evidence": "Renames flag to return_emails and demonstrates named call; preserves positional behavior, notes keyword migration and asks to inspect callers."
+      },
+      {
+        "criterion": "Uses fixture rather than personal familiarity.",
+        "met": true,
+        "evidence": "Cites concrete branch lines/fields and list return shape."
+      }
+    ],
+    "reject": [
+      {
+        "criterion": "Line-by-line comments.",
+        "triggered": false,
+        "evidence": "No comments proposed."
+      },
+      {
+        "criterion": "Claims obvious because short.",
+        "triggered": false,
+        "evidence": "Explains hidden semantic branch."
+      }
+    ],
+    "outcome": "pass",
+    "limitations": "`process(rows)` still returns IDs by default without advertising that in the function name; the response does explain the mapping and treats separate functions as a larger alternative."
+  },
+  {
+    "id": "make-unexpected-branch-obvious-attempt-1",
+    "acceptance": [
+      {
+        "criterion": "Identifies flag-dependent return shape as obscurity.",
+        "met": true,
+        "evidence": "Accurately traces active filter, email branch, ID default branch."
+      },
+      {
+        "criterion": "Proposes explicit contract and accounts for existing callers.",
+        "met": false,
+        "evidence": "Proposes keyword-only `return_emails`, which breaks positional boolean calls; notes unknown positional use but gives no compatibility/migration path."
+      },
+      {
+        "criterion": "Uses fixture behavior rather than personal familiarity.",
+        "met": true,
+        "evidence": "Cites branch behavior and explains caller cannot infer from generic flag."
+      }
+    ],
+    "reject": [
+      {
+        "criterion": "Line-by-line comments.",
+        "triggered": false,
+        "evidence": "No comments proposed."
+      },
+      {
+        "criterion": "Claims obvious because implementation is short.",
+        "triggered": false,
+        "evidence": "Explicitly identifies unclear output mode."
+      }
+    ],
+    "outcome": "fail",
+    "limitations": "This is graded independently from final response; failure is limited to not accounting for positional-call compatibility in the proposed keyword-only signature."
+  },
+  {
+    "id": "measure-before-adding-index",
+    "acceptance": [
+      {
+        "criterion": "Notes linear scans/repeated calls and absent workload evidence.",
+        "met": true,
+        "evidence": "Identifies O(N×M) possible comparisons and missing size/distribution/target/measurements."
+      },
+      {
+        "criterion": "Treats bottleneck as hypothesis and proposes bounded reproducible measurement with correctness checks.",
+        "met": true,
+        "evidence": "Provides representative workload, baseline/candidate measurement, variability, profile, semantics checks."
+      },
+      {
+        "criterion": "Keeps simple implementation absent evidence.",
+        "met": true,
+        "evidence": "Recommends retaining scan until measured target improvement justifies index state."
+      }
+    ],
+    "reject": [
+      {
+        "criterion": "Unsupported speedup/necessity claims.",
+        "triggered": false,
+        "evidence": "Separates asymptotic estimate from absent benchmark."
+      },
+      {
+        "criterion": "Ignores semantics/invalidation.",
+        "triggered": false,
+        "evidence": "Covers duplicate first-match, identity/missing/order/repeats, mutations/cache staleness."
+      }
+    ],
+    "outcome": "pass",
+    "limitations": "Measurement plan is detailed but no environment, workload, or benchmark was provided/run; response clearly labels these unknown."
+  },
+  {
+    "id": "move-shared-retry-mechanics-down",
+    "acceptance": [
+      {
+        "criterion": "Points to repeated caller mechanics.",
+        "met": true,
+        "evidence": "Identifies timeout-only three-attempt loops in event and audit writers."
+      },
+      {
+        "criterion": "Moves genuinely shared mechanics; keeps domain validation with owner.",
+        "met": true,
+        "evidence": "Proposes opt-in retrying lower-level operation, keeps each validation at caller."
+      },
+      {
+        "criterion": "Excludes payments absent idempotency.",
+        "met": true,
+        "evidence": "Preserves one-call payment path and requires idempotency evidence for event/audit retries."
+      }
+    ],
+    "reject": [
+      {
+        "criterion": "Moves every decision down because repetition.",
+        "triggered": false,
+        "evidence": "Keeps domain rules local."
+      },
+      {
+        "criterion": "Retries non-idempotent payment.",
+        "triggered": false,
+        "evidence": "Explicitly excludes payment."
+      }
+    ],
+    "outcome": "pass",
+    "limitations": "Potential lower-level helper is hypothetical; response correctly flags that timeout-after-acceptance safety for event/audit is unknown."
+  },
+  {
+    "id": "bounded-design-investment",
+    "acceptance": [
+      {
+        "criterion": "Compares direct duplication with focused shared owner.",
+        "met": true,
+        "evidence": "Contrasts third importer copying schema/conversion/check with a Store operation constructing canonical records."
+      },
+      {
+        "criterion": "Relates investment cost to immediate third importer and specified format change.",
+        "met": true,
+        "evidence": "Ties duplicated edits to third importer and planned format change; cost is one focused method."
+      },
+      {
+        "criterion": "States unknown consumers/requirements and avoids broad rewrite.",
+        "met": true,
+        "evidence": "Limits recommendation to fixture and says outside callers unknown; rejects framework."
+      }
+    ],
+    "reject": [
+      {
+        "criterion": "All future work is waste/speculative architecture.",
+        "triggered": false,
+        "evidence": "Recommends narrowly justified investment."
+      },
+      {
+        "criterion": "Repository-wide framework.",
+        "triggered": false,
+        "evidence": "One Store method only."
+      }
+    ],
+    "outcome": "pass",
+    "limitations": "The proposed Store method accepts seconds and thus relies on third-importer unit being compatible; response scopes this to fixture/change."
+  },
+  {
+    "id": "fix-optional-setting-failure-contract",
+    "acceptance": [
+      {
+        "criterion": "Only documented KeyError maps to None.",
+        "met": true,
+        "evidence": "Artifact catches only KeyError; deterministic check passes missing case."
+      },
+      {
+        "criterion": "Operational exceptions propagate with original type and cause.",
+        "met": true,
+        "evidence": "Own checks assert PermissionError/ConnectionError identity; independent verifier asserts same object and __cause__."
+      },
+      {
+        "criterion": "Required missing KeyError and unchanged non-None values.",
+        "met": true,
+        "evidence": "Code leaves get_required direct; independent verifier checks missing KeyError and values dark/False/0/empty unchanged."
+      },
+      {
+        "criterion": "Executable checks and accurately reported results.",
+        "met": true,
+        "evidence": "Five local checks reported and pass; independent verifier also passes. Response limits this to fake backend, not real OS/network."
+      }
+    ],
+    "reject": [
+      {
+        "criterion": "Catches Exception/converts operational failures.",
+        "triggered": false,
+        "evidence": "Only KeyError caught."
+      },
+      {
+        "criterion": "Changes required semantics or adds None sentinel.",
+        "triggered": false,
+        "evidence": "No such change."
+      },
+      {
+        "criterion": "Edits source fixture/false test claims/unrelated changes.",
+        "triggered": false,
+        "evidence": "Artifact in isolated tmp; claimed command aligns with test script; no unrelated code."
+      }
+    ],
+    "outcome": "pass",
+    "limitations": "Checks use deterministic fake backends; no real permission boundary or transport was exercised."
+  },
+  {
+    "id": "centralize-versioned-record-construction",
+    "acceptance": [
+      {
+        "criterion": "One owner for version/timestamp/construction; storage validation at storage owner.",
+        "met": true,
+        "evidence": "Both importers call make_storage_record; Store.write calls centralized validate_storage_record."
+      },
+      {
+        "criterion": "Retains importer kind and input order.",
+        "met": true,
+        "evidence": "Session/event kinds passed at call sites; loops still write row by row. Local contract check and verifier confirm."
+      },
+      {
+        "criterion": "Preserves Store contract and exact shape.",
+        "met": true,
+        "evidence": "Store.write and copy behavior retained; verifier compares original/candidate across direct-record cases."
+      },
+      {
+        "criterion": "Checks valid, fractional negative near zero, negative converted result, kinds/order; reported results match.",
+        "met": true,
+        "evidence": "check_contract covers shape, 1.2349 truncation, -0.0001 => 0, -0.0011 rejection, kinds/order; command stated passed. Independent verifier passes four broader comparisons."
+      }
+    ],
+    "reject": [
+      {
+        "criterion": "Syntax dedup only with split policy.",
+        "triggered": false,
+        "evidence": "Construction/conversion are centralized and Store validation remains at Store."
+      },
+      {
+        "criterion": "Erases kind/changes timestamp/order.",
+        "triggered": false,
+        "evidence": "Kinds and int conversion preserved; independent verifier checks outputs and partial effects."
+      },
+      {
+        "criterion": "Framework/source fixture edit/false checks.",
+        "triggered": false,
+        "evidence": "Narrow helper; files isolated in tmp; run reports match available scripts."
+      }
+    ],
+    "outcome": "pass",
+    "limitations": "No callers beyond fixture inspected. `check_contract.py` has no explicit unknown-kind rejection test, but acceptance does not require a kind restriction; verifier checks legacy raw-record compatibility."
+  }
+]

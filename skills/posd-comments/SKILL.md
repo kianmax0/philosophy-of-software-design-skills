@@ -1,46 +1,35 @@
 ---
 name: posd-comments
-description: Use when reviewing or writing code comments, interface documentation, invariants, units, or explanations of non-obvious behavior
+description: Design or review comments that define an abstraction, add precision or intuition, preserve a cross-module decision, or explain non-obvious code.
 license: MIT
 ---
 
-# Comments
+# Comments as design
 
-Use this skill to decide whether a comment preserves knowledge that the code alone does not communicate. Useful comments explain intent, constraints, invariants, units, side effects, or a non-obvious reason. Comments that translate each line into prose add maintenance work without clarifying behavior.
+Use comments to record important information that declarations and nearby code cannot express. They reduce the reader's need to inspect implementations, recover a designer's reasoning, or guess an invariant. A useful comment adds a different level of information; it does not paraphrase a line.
 
-The design principle is associated with John Ousterhout's *A Philosophy of Software Design*. The procedure and examples here are original adaptations. See the [Stanford CS190 book discussion](https://web.stanford.edu/~ouster/cgi-bin/cs190-winter20/lecture.php?topic=bookReview) for the principle-level source.
+Source: John Ousterhout, *A Philosophy of Software Design*, 2nd ed. (2021), Chapters 12–16, especially §§13.2–13.7, 15.1–15.3, and 16.1–16.6 (PDF file-page numbers, pp. 116–165). The workflow below is an original application of those ideas.
 
 ## Procedure
 
-1. Identify the audience and decision the comment should support: API caller, maintainer, operator, or future author of an implementation.
-2. Read the surrounding code and contract first. Record path:line evidence and distinguish facts verified in code or tests from assumptions stated by the comment.
-3. Ask what a careful reader could not infer: why a choice exists, what must remain true, how to interpret units or sentinel values, what side effects occur, or what callers may rely on.
-4. Keep the comment at the right boundary. Put stable usage and behavior guidance near the interface; put local rationale or an invariant near the implementation. Update or remove stale claims when behavior changes.
-5. When designing an interface, draft its comment before implementation as a probe. If the intended behavior cannot be described clearly without mentioning internal steps, reconsider the interface. Treat the comment as a design aid, then verify it against the implementation.
-6. For reviews, report only. If comment changes are requested, preserve verified technical meaning and check that every claim matches current behavior.
+1. **Find the contract and audience.** Read the declaration, implementation, representative callers, tests, and nearby comments. Decide whether the reader is an API caller, a maintainer of the implementation, or an author working across modules. Keep verified behavior distinct from an assumption or historical rationale.
+2. **Draft abstraction comments during design.** Before implementing a new module or method, write its interface comment: what it provides, its arguments and result, side effects or failures, and caller obligations. Describe behavior at a level callers need, not the steps used to implement it. If this is hard to state simply, revisit the interface or ownership before coding. Recheck the comment after implementation.
+3. **Add precision at declarations.** For fields, arguments, and results, state details not carried by the name or type: units, inclusive/exclusive bounds, null or sentinel meaning, resource ownership and release, and invariants. Describe what a value represents (nouns), not every place that changes it.
+4. **Add intuition near decisions.** For a method or code block, explain its overall purpose, why it is needed, or the condition that brings execution here. Use a lower-level comment only when exact semantics matter and cannot be encoded clearly in the type or API. A reader should be able to connect the comment to the code without tracing unrelated modules.
+5. **Record cross-module decisions at their owner.** If correctness depends on a rule spanning modules, document the rule where the responsible module's design is visible and point to the other side when useful. Name the dependency, the invariant or ordering rule, and who must preserve it. Avoid scattering duplicate copies that can drift.
+6. **Carry requested edits through.** For an implementation request, update the comment and the behavior it documents, then update affected callers/contracts where the interface changed. Run the relevant tests or checks and inspect the diff for stale, duplicated, contradicted, and overly detailed comments. Report edits and verification performed. For review-only requests, recommend changes without editing.
 
-## Output
+## Decision checks
 
-For each comment issue, report:
-
-- **Evidence:** path:line and the code or interface it describes.
-- **Reader question:** what remains unclear or what is repeated.
-- **Action:** add, move, correct, shorten, or remove, with the knowledge to preserve.
-- **Verification:** source, test, or contract supporting the resulting claim.
-
-Do not infer intent from an old comment alone. If the rationale cannot be established, flag it for an owner rather than rewriting speculation as fact.
+- Could someone write this comment by looking only at the adjacent code and names? If so, it probably repeats rather than explains.
+- Does it give a caller enough information to use the abstraction without reading its implementation? Include the behavior and meaningful constraints, not internal steps.
+- Is a claim about units, ownership, failure, ordering, or rationale supported by the implementation, tests, contract, or an owner? Do not convert an unverified guess into documentation.
+- Can the code or type make an invariant precise while the comment still records the caller-facing abstraction or design rationale? Use both at their proper levels: types carry enforceable facts; comments preserve the simplified contract and reasoning callers need.
 
 ## Example
 
-Before: `// Add 1 to retryCount` above `retryCount++` repeats the code.
+`// Increment retryCount` above `retryCount++` restates syntax. A useful interface or implementation comment might instead explain that retries share the original request deadline, if the contract and code confirm that rule. Place the rule near the retry policy or API that owns it; do not copy it beside every increment.
 
-After: `// Keep the original request deadline across retries so retries cannot extend the caller's timeout.` This belongs only if the deadline behavior is confirmed by the implementation or contract.
+## Output
 
-## Leave the Comment Alone When
-
-- It documents a subtle invariant, externally relied-on behavior, units, side effects, or a justified workaround.
-- Removing it would force readers to rediscover non-obvious context.
-- The supposed redundancy disappears only to someone who already knows the domain.
-- The evidence does not establish whether a claim is stale or still required.
-
-Comments should capture knowledge rather than narrate syntax. A concise interface comment can be more valuable than a detailed description of internal steps, especially when implementations may change.
+For each proposed comment change, give the location, intended reader, missing or repeated information, exact knowledge to preserve, and evidence supporting its claims. For an implementation request, report files/contracts/callers changed and the relevant tests or checks run, including failures. For review-only work, give bounded recommendations without editing. If rationale is not established, state the uncertainty and identify the owner who can resolve it.
