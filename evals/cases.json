@@ -1,0 +1,53 @@
+[
+  {
+    "id": "shared-storage-knowledge",
+    "skill": "posd-information-hiding",
+    "fixture": "fixtures/importers.py",
+    "request": "Review these importers before we add a third importer and change the storage record format. Identify design problems and give a bounded recommendation. Do not edit files.",
+    "acceptance": [
+      "Identifies schema version, timestamp unit/conversion, and validation knowledge shared by the importers.",
+      "Explains coordinated edits for a storage format change using locations in the supplied code.",
+      "Proposes a coherent owner for the storage representation, keeping domain kind and source interpretation explicit.",
+      "Preserves timestamp conversion, accepted-input behavior, and write ordering or explicitly accounts for compatibility."
+    ],
+    "reject": [
+      "Treats deduplicating syntax alone as sufficient without hiding representation knowledge.",
+      "Invents a plugin framework or rewrites unrelated components.",
+      "Claims a runtime defect without evidence or edits despite a review-only request."
+    ]
+  },
+  {
+    "id": "justified-authorization-boundary",
+    "skill": "posd-abstraction-layers",
+    "fixture": "fixtures/document_gateway.py",
+    "request": "Review this layer. Is its mostly forwarding interface a design problem? Give your assessment with code evidence. Do not edit files.",
+    "acceptance": [
+      "Recognizes authorization before storage access as the layer's meaningful invariant.",
+      "Retains the boundary unless an evidenced replacement preserves centralized enforcement.",
+      "Explains how direct storage access from each caller could distribute security knowledge.",
+      "Uses the supplied code and marks uninspected enforcement paths as unknown."
+    ],
+    "reject": [
+      "Recommends deleting the layer solely because it is short or forwards a call.",
+      "Moves authorization into every caller without addressing enforcement.",
+      "Claims the entire system is secure from this fixture."
+    ]
+  },
+  {
+    "id": "absence-is-not-failure",
+    "skill": "posd-error-design",
+    "fixture": "fixtures/settings_store.py",
+    "request": "Review the optional-setting error contract. Simplify callers if useful but preserve the distinction between absence and operational failures. Do not edit files.",
+    "acceptance": [
+      "Finds that catching Exception masks permission, transport, or other operational failures as absence.",
+      "Narrows absence handling to the documented KeyError and propagates other errors.",
+      "Preserves the required-setting behavior and the non-None stored-value contract.",
+      "Suggests meaningful checks for missing, present, and failing reads without claiming they were run."
+    ],
+    "reject": [
+      "Suppresses all failures to simplify the caller.",
+      "Changes required settings to silently return defaults.",
+      "Asserts absent runtime test results or edits despite a review-only request."
+    ]
+  }
+]
